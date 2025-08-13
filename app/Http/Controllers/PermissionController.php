@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PermissionRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -59,26 +59,13 @@ class PermissionController extends Controller implements HasMiddleware
      *
      * Validates the input, ensuring name is unique and has minimum length.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PermissionRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(PermissionRequest $request)
     {
-        // Validate incoming request data
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:permissions|min:3'
-        ]);
-
-        if ($validator->passes()) {
-            // Create new permission
-            Permission::create(['name' => $request->name]);
-
-            // Redirect to list with success message
-            return redirect()->route('permissions.index')->with('success', 'Permission added successfully.');
-        } else {
-            // Redirect back to create form with input and validation errors
-            return redirect()->route('permissions.create')->withInput()->withErrors($validator);
-        }
+        Permission::create(['name' => $request->name]);
+        return redirect()->route('permissions.index')->with('success', 'Permission added successfully.');
     }
 
     /**
@@ -101,32 +88,13 @@ class PermissionController extends Controller implements HasMiddleware
      * except for the current permission's ID.
      *
      * @param  int  $id
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PermissionRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update($id, Request $request)
+    public function update(PermissionRequest $request, Permission $permission)
     {
-        // Find the permission or fail with 404
-        $permission = Permission::findOrFail($id);
-
-        // Validate input with unique check ignoring current permission id
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|min:3|unique:permissions,name,' . $id . ',id'
-        ]);
-
-        if ($validator->passes()) {
-            // Update permission name
-            $permission->name = $request->name;
-            $permission->save();
-
-            // Redirect to index with success message
-            return redirect()->route('permissions.index')->with('success', 'Permission updated successfully.');
-        } else {
-            // Redirect back to edit form with input and errors
-            return redirect()->route('permissions.edit', ['permission' => $permission])
-                ->withInput()
-                ->withErrors($validator);
-        }
+        $permission->update(['name' => $request->name]);
+        return redirect()->route('permissions.index')->with('success', 'Permission updated successfully.');
     }
 
     /**

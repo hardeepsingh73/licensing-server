@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RoleRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -68,36 +67,21 @@ class RoleController extends Controller implements HasMiddleware
      *
      * Validate input, create the role, and assign selected permissions.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  App\Http\Requests\RoleRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(RoleRequest $request)
     {
-        // Validate the new role name (must be unique, at least 3 characters)
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:roles|min:3'
-        ]);
+        $role = Role::create(['name' => $request->name]);
 
-        if ($validator->passes()) {
-            // Create the new Role
-            $role = Role::create(['name' => $request->name]);
-
-            // Assign selected permissions, if any
-            if (!empty($request->permissions)) {
-                // Get the permission names based on the IDs
-                $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
-                $role->givePermissionTo($permissions);
-            }
-
-            return redirect()->route('roles.index')
-                ->with('success', 'Role added successfully.');
-        } else {
-            // Redirect back to form with validation errors and input data
-            return redirect()->route('roles.create')
-                ->withInput()
-                ->withErrors($validator);
+        if ($request->filled('permissions')) {
+            $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
+            $role->givePermissionTo($permissions);
         }
+
+        return redirect()->route('roles.index')->with('success', 'Role added successfully.');
     }
+
 
     /**
      * Show the form for editing the specified role.
@@ -128,41 +112,22 @@ class RoleController extends Controller implements HasMiddleware
      * Validates input, updates the role name and synchronizes permissions.
      *
      * @param  int  $id
-     * @param  \Illuminate\Http\Request  $request
+     * @param  App\Http\Requests\RoleRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update($id, Request $request)
+    public function update(RoleRequest $request, Role $role)
     {
-        // Find role or abort 404 if not found
-        $role = Role::findOrFail($id);
+        $role->name = $request->name;
+        $role->save();
 
-        // Validate form input; unique rule ignores this role's own ID
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:roles,name,' . $id . ',id|min:3'
-        ]);
-
-        if ($validator->passes()) {
-            // Update the role's name
-            $role->name = $request->name;
-            $role->save();
-
-            // Synchronize the role's permissions
-            if (!empty($request->permissions)) {
-                // Get the permission names based on the IDs
-                $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
-                $role->syncPermissions($permissions);
-            } else {
-                $role->syncPermissions([]);
-            }
-
-            return redirect()->route('roles.index')
-                ->with('success', 'Role updated successfully.');
+        if ($request->filled('permissions')) {
+            $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
+            $role->syncPermissions($permissions);
         } else {
-            // Redirect back to edit form with validation errors and old input
-            return redirect()->route('roles.edit', ['role' => $role])
-                ->withInput()
-                ->withErrors($validator);
+            $role->syncPermissions([]);
         }
+
+        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
     }
 
     /**

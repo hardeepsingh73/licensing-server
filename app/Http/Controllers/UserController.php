@@ -4,18 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Helpers\RoleDataHelper;
 use App\Helpers\Settings;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Services\SearchService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller implements HasMiddleware
 {
@@ -83,10 +82,7 @@ class UserController extends Controller implements HasMiddleware
                 ]
             ],
             $request
-        );
-
-        // Order by newest and paginate results (10 per page)
-        $users = $users->latest()->paginate(10);
+        )->latest()->paginate(10);
 
         return view('users.index', compact('users', 'roles'));
     }
@@ -123,21 +119,8 @@ class UserController extends Controller implements HasMiddleware
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'roles' => ['sometimes', 'string', Rule::exists('roles', 'name')],
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return redirect()->route('users.create')->withInput()->withErrors($validator);
-        }
-
         DB::beginTransaction();
 
         try {
@@ -147,8 +130,9 @@ class UserController extends Controller implements HasMiddleware
                 'password' => Hash::make($request->password),
             ]);
 
-            // Assign role to the user
-            $user->assignRole($request->input('roles'));
+            if ($request->filled('roles')) {
+                $user->assignRole($request->roles);
+            }
 
             DB::commit();
 
@@ -156,7 +140,6 @@ class UserController extends Controller implements HasMiddleware
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Return with error message and input preserved
             return redirect()->route('users.create')
                 ->withInput()
                 ->withErrors(['error' => 'Something went wrong: ' . $e->getMessage()]);
@@ -186,7 +169,6 @@ class UserController extends Controller implements HasMiddleware
             ->orderBy('name', 'ASC')
             ->get();
 
-        // Assume single role; get current user's role name for form selection
         $currentRoleName = $user->getRoleNames()->first();
 
         return view('users.form', compact('user', 'roles', 'currentRoleName'));
@@ -203,34 +185,25 @@ class UserController extends Controller implements HasMiddleware
      * @param string $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, string $id)
+    public function update(UserRequest $request, User $user)
     {
-        $user = User::findOrFail($id);
         $this->authorize('manage', $user);
-
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
-            'roles' => ['required', 'string', Rule::exists('roles', 'name')],
-        ];
-
-        $validated = $request->validate($rules);
 
         DB::beginTransaction();
 
         try {
-            $user->name = $validated['name'];
-            $user->email = $validated['email'];
+            $user->name = $request->name;
+            $user->email = $request->email;
 
-            if (!empty($validated['password'])) {
-                $user->password = Hash::make($validated['password']);
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
             }
 
             $user->save();
 
-            // Sync new role(s)
-            $user->syncRoles([$validated['roles']]);
+            if ($request->filled('roles')) {
+                $user->syncRoles([$request->roles]);
+            }
 
             DB::commit();
 
