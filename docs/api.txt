@@ -1,6 +1,6 @@
 curl -X GET http://127.0.0.1:8000/api/users \
   -H "Accept: application/json" \
-  -H "Authorization: Bearer 2|3rQivhNykC585GMUTceQDyYivYK3ChgntcM8QzH0945c6a58"
+  -H "Authorization: Bearer 6|oZLboRfWTwhKKOy9zn5lwa7OhmOV0mK5KWsVKvUid0968126"
 
 
   curl -X POST http://127.0.0.1:8000/api/login \
