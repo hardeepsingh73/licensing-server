@@ -69,19 +69,19 @@ class SearchService
             if (str_contains($column, '->')) {
                 $query->whereJsonContains($column, $value);
 
-            // Handle exact match
+                // Handle exact match
             } elseif ($operator === '=') {
                 $query->where($column, $value);
 
-            // Handle multiple values
+                // Handle multiple values
             } elseif ($operator === 'IN') {
                 $query->whereIn($column, (array) $value);
 
-            // Handle partial match (default)
+                // Handle partial match (default)
             } elseif ($operator === 'LIKE') {
                 $query->where($column, 'LIKE', "%{$value}%");
 
-            // Handle numeric or comparison operators
+                // Handle numeric or comparison operators
             } else {
                 $query->where($column, $operator, $value);
             }
@@ -109,7 +109,7 @@ class SearchService
     protected function applyRelationshipFilter(Builder $query, string $relationship, array $config, Request $request): void
     {
         $field      = $config['field'] ?? 'id';
-        $operator   = $config['operator'] ?? '=';
+        $operator   = $config['operator'] ?? 'LIKE';
         $requestKey = $config['request_key'] ?? $relationship;
 
         if ($request->filled($requestKey)) {
@@ -118,6 +118,8 @@ class SearchService
             $query->whereHas($relationship, function (Builder $q) use ($field, $operator, $value) {
                 if ($operator === 'IN') {
                     $q->whereIn($field, (array) $value);
+                } elseif ($operator === 'LIKE') {
+                    $q->where($field, 'LIKE', "%{$value}%"); // Add wildcards for LIKE
                 } else {
                     $q->where($field, $operator, $value);
                 }
