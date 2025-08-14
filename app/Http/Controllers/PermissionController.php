@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PermissionRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 
 class PermissionController extends Controller implements HasMiddleware
 {
@@ -24,7 +24,7 @@ class PermissionController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:view permissions', only: ['index']),
-            new Middleware('permission:edit permissions', only: ['edit']),
+            new Middleware('permission:edit permissions', only: ['edit', 'update']),
             new Middleware('permission:create permissions', only: ['create', 'store']),
             new Middleware('permission:delete permissions', only: ['destroy']),
         ];
@@ -37,11 +37,8 @@ class PermissionController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        // Retrieve permissions ordered newest first
         $permissions = Permission::orderBy('created_at', 'DESC')->paginate(10);
-
-        // Render the index view with permissions data
-        return view('permissions.index', ['permissions' => $permissions]);
+        return view('permissions.index', compact('permissions'));
     }
 
     /**
@@ -62,10 +59,23 @@ class PermissionController extends Controller implements HasMiddleware
      * @param  \App\Http\Requests\PermissionRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(PermissionRequest $request)
+    public function store(PermissionRequest $request): RedirectResponse
     {
-        Permission::create(['name' => $request->name]);
-        return redirect()->route('permissions.index')->with('success', 'Permission added successfully.');
+        DB::beginTransaction();
+
+        try {
+            $permission = Permission::create(['name' => $request->name]);
+
+            if (!$permission) {
+                throw new \Exception('Failed to create permission');
+            }
+
+            DB::commit();
+            return redirect()->route('permissions.index')->with('success', 'Permission created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('permissions.index')->with('error', 'Permission creation failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -78,7 +88,7 @@ class PermissionController extends Controller implements HasMiddleware
      */
     public function edit(Permission $permission)
     {
-        return view('permissions.form', ['permission' => $permission]);
+        return view('permissions.form', compact('permission'));
     }
 
     /**
@@ -91,12 +101,24 @@ class PermissionController extends Controller implements HasMiddleware
      * @param  \App\Http\Requests\PermissionRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(PermissionRequest $request, Permission $permission)
+    public function update(PermissionRequest $request, Permission $permission): RedirectResponse
     {
-        $permission->update(['name' => $request->name]);
-        return redirect()->route('permissions.index')->with('success', 'Permission updated successfully.');
-    }
+        DB::beginTransaction();
 
+        try {
+            $updated = $permission->update(['name' => $request->name]);
+
+            if (!$updated) {
+                throw new \Exception('Failed to update permission');
+            }
+
+            DB::commit();
+            return redirect()->route('permissions.index')->with('success', 'Permission updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('permissions.index')->with('error', 'Permission update failed: ' . $e->getMessage());
+        }
+    }
     /**
      * Delete a permission.
      *
@@ -112,15 +134,28 @@ class PermissionController extends Controller implements HasMiddleware
         // Ensure the current user is authorized to delete the permission
         if (Gate::denies('delete', $permission)) {
             return redirect()
-                ->route('permission.index')
+                ->route('permissions.index')
                 ->with('error', 'Unauthorized action.');
         }
 
-        $permission->delete();
+        DB::beginTransaction();
 
-        // Redirect with success message
-        return redirect()
-            ->route('permissions.index')
-            ->with('success', 'Permission deleted successfully.');
+        try {
+            $deleted = $permission->delete();
+
+            if (!$deleted) {
+                throw new \Exception('Failed to delete permission');
+            }
+
+            DB::commit();
+            return redirect()
+                ->route('permissions.index')
+                ->with('success', 'Permission deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('permissions.index')
+                ->with('error', 'Permission deletion failed: ' . $e->getMessage());
+        }
     }
 }

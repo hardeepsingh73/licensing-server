@@ -25,4 +25,18 @@ class PermissionRequest extends FormRequest
             ],
         ];
     }
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'The permission name is required.',
+            'name.min' => 'The permission name must be at least :min characters.',
+            'name.unique' => 'This permission name is already in use.',
+        ];
+    }
+    public function attributes(): array
+    {
+        return [
+            'name' => 'permission name',
+        ];
+    }
 }

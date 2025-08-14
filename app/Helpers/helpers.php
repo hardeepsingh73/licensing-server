@@ -25,3 +25,44 @@ if (!function_exists('setting')) {
         return Settings::get($key, $default);
     }
 }
+if (!function_exists('consthelper')) {
+    /**
+     * Get a constant or static property from any class
+     *
+     * @param string $key Format: "ClassName::CONST_NAME" or "ClassName::$propertyName"
+     * @param mixed $default Default value if not found
+     * @return mixed
+     */
+    function consthelper(string $key, $default = null)
+    {
+        // Split Class and Key (e.g., "User::STATUS_ACTIVE" or "User::$statuses")
+        $parts = explode('::', $key);
+
+        // Default to App\Models if no namespace specified
+        if (count($parts) === 1) {
+            $className = 'App\\Models\\' . $parts[0];
+            $keyName = $parts[0];
+        } else {
+            $className = (strpos($parts[0], '\\') === false)
+                ? 'App\\Models\\' . $parts[0]
+                : $parts[0];
+            $keyName = $parts[1];
+        }
+
+        // Check if class exists
+        if (!class_exists($className)) {
+            return $default;
+        }
+
+        // Handle static properties (e.g., "$statuses")
+        if (str_starts_with($keyName, '$')) {
+            $propertyName = substr($keyName, 1); // Remove "$" prefix
+            return $className::${$propertyName};
+        }
+
+        // Handle constants (e.g., "STATUS_ACTIVE")
+        $reflection = new ReflectionClass($className);
+        $constants = $reflection->getConstants();
+        return $constants[$keyName] ?? $default;
+    }
+}

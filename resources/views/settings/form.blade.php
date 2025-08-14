@@ -53,8 +53,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="key" class="form-label">Setting Key <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('key') is-invalid @enderror" id="key"
-                            name="key" value="{{ old('key', $setting->key ?? '') }}" placeholder="e.g. site_name"
-                            required>
+                            name="key" value="{{ old('key', $setting->key ?? '') }}" placeholder="e.g. site_name">
                         @error('key')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -66,7 +65,7 @@
                         <label for="group" class="form-label">Group <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <select class="form-control @error('group') is-invalid @enderror" id="group-select"
-                                name="group" required>
+                                name="group">
                                 <option value="">Select Group</option>
                                 @foreach ($groups as $group)
                                     <option value="{{ $group }}"
@@ -90,25 +89,14 @@
                     <!-- Data Type -->
                     <div class="col-md-6 mb-3">
                         <label for="type" class="form-label">Data Type <span class="text-danger">*</span></label>
-                        <select class="form-control @error('type') is-invalid @enderror" id="type" name="type"
-                            required>
+                        <select class="form-control @error('type') is-invalid @enderror" id="type" name="type">
                             <option value="">Select Type</option>
-                            <option value="string"
-                                {{ old('type', $setting->type ?? '') == 'string' ? 'selected' : '' }}>String</option>
-                            <option value="text" {{ old('type', $setting->type ?? '') == 'text' ? 'selected' : '' }}>
-                                Text</option>
-                            <option value="boolean"
-                                {{ old('type', $setting->type ?? '') == 'boolean' ? 'selected' : '' }}>Boolean</option>
-                            <option value="integer"
-                                {{ old('type', $setting->type ?? '') == 'integer' ? 'selected' : '' }}>Integer</option>
-                            <option value="float"
-                                {{ old('type', $setting->type ?? '') == 'float' ? 'selected' : '' }}>Float</option>
-                            <option value="array"
-                                {{ old('type', $setting->type ?? '') == 'array' ? 'selected' : '' }}>Array</option>
-                            <option value="json" {{ old('type', $setting->type ?? '') == 'json' ? 'selected' : '' }}>
-                                JSON</option>
-                            <option value="image"
-                                {{ old('type', $setting->type ?? '') == 'image' ? 'selected' : '' }}>Image</option>
+                            @foreach (consthelper('Setting::$types') as $type)
+                                <option value="{{ $type }}"
+                                    {{ old('type', $setting->type ?? '') == $type ? 'selected' : '' }}>
+                                    {{ $type }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -148,12 +136,8 @@
                     // Group selection toggle
                     $('#group-select').change(function() {
                         if ($(this).val() === '__new__') {
-                            $('#group-input').removeClass('d-none')
-                                .prop('required', true)
-                                .attr('name', 'group');
-                            $('#group-select').addClass('d-none')
-                                .prop('required', false)
-                                .removeAttr('name');
+                            $('#group-input').removeClass('d-none').attr('name', 'group');
+                            $('#group-select').addClass('d-none').removeAttr('name');
                         }
                     });
 
@@ -162,19 +146,11 @@
                         const $groupSelect = $('#group-select');
 
                         if ($groupInput.hasClass('d-none')) {
-                            $groupInput.removeClass('d-none')
-                                .prop('required', true)
-                                .attr('name', 'group');
-                            $groupSelect.addClass('d-none')
-                                .prop('required', false)
-                                .removeAttr('name');
+                            $groupInput.removeClass('d-none').attr('name', 'group');
+                            $groupSelect.addClass('d-none').removeAttr('name');
                         } else {
-                            $groupInput.addClass('d-none')
-                                .prop('required', false)
-                                .removeAttr('name');
-                            $groupSelect.removeClass('d-none')
-                                .prop('required', true)
-                                .attr('name', 'group');
+                            $groupInput.addClass('d-none').removeAttr('name');
+                            $groupSelect.removeClass('d-none').attr('name', 'group');
                         }
                     });
 
@@ -187,7 +163,7 @@
 
                         switch (type) {
                             case 'boolean':
-                                html += `<select name="value" id="value" class="form-control" required>
+                                html += `<select name="value" id="value" class="form-control" >
                     <option value="1" ${currentValue == '1' ? 'selected' : ''}>Yes</option>
                     <option value="0" ${currentValue == '0' ? 'selected' : ''}>No</option>
                 </select>`;
@@ -195,12 +171,12 @@
 
                             case 'text':
                                 html +=
-                                    `<textarea name="value" id="value" class="form-control" rows="3" required>${currentValue}</textarea>`;
+                                    `<textarea name="value" id="value" class="form-control" rows="3" >${currentValue}</textarea>`;
                                 break;
 
                             case 'image':
                                 html += `<div>
-                    <input type="file" name="value" id="value" class="form-control" ${'{{ isset($setting) }}' == '' ? 'required' : ''}>
+                    <input type="file" name="value" id="value" class="form-control" >
                     @if (isset($setting) && $setting->type === 'image' && $setting->value)
                         <div class="mt-2">
                             <img src="{{ Storage::url($setting->value) }}" alt="Current image" style="max-height: 100px;">
@@ -215,7 +191,7 @@
 
                             case 'array':
                             case 'json':
-                                html += `<textarea name="value" id="value" class="form-control" rows="3" required>${currentValue}</textarea>
+                                html += `<textarea name="value" id="value" class="form-control" rows="3" >${currentValue}</textarea>
                     <small class="text-muted">
                         ${type === 'array' ? 'Comma-separated, e.g. value1,value2,value3' : 'Valid JSON string'}
                     </small>`;
@@ -225,7 +201,7 @@
                                 const inputType = (type === 'integer' || type === 'float') ? 'number' : 'text';
                                 const step = (type === 'float') ? 'any' : '1';
                                 html += `<input type="${inputType}" name="value" id="value" class="form-control"
-                    value="${currentValue}" ${inputType === 'number' ? `step="${step}"` : ''} required>`;
+                    value="${currentValue}" ${inputType === 'number' ? `step="${step}"` : ''} >`;
                         }
 
                         $('#value-container').html(html);

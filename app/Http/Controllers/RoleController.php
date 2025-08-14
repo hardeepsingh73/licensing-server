@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller implements HasMiddleware
 {
@@ -39,10 +40,7 @@ class RoleController extends Controller implements HasMiddleware
     {
         // Retrieve roles ordered by name ascending and paginate 10 per page
         $roles = Role::orderBy('name', 'ASC')->paginate(10);
-
-        return view('roles.index', [
-            'roles' => $roles
-        ]);
+        return view('roles.index', compact('roles'));
     }
 
     /**
@@ -56,10 +54,7 @@ class RoleController extends Controller implements HasMiddleware
     {
         // Retrieve all permissions to show as assignable options
         $permissions = Permission::all();
-
-        return view('roles.form', [
-            'permissions' => $permissions
-        ]);
+        return view('roles.form', compact('permissions'));
     }
 
     /**
@@ -70,16 +65,33 @@ class RoleController extends Controller implements HasMiddleware
      * @param  App\Http\Requests\RoleRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(RoleRequest $request)
+    public function store(RoleRequest $request): RedirectResponse
     {
-        $role = Role::create(['name' => $request->name]);
+        DB::beginTransaction();
 
-        if ($request->filled('permissions')) {
-            $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
-            $role->givePermissionTo($permissions);
+        try {
+            // Create the role
+            $role = Role::create(['name' => $request->name]);
+
+            if (!$role) {
+                throw new \Exception('Failed to create role');
+            }
+
+            // Assign permissions if provided
+            if ($request->filled('permissions')) {
+                $permissions = Permission::whereIn('id', $request->permissions)
+                    ->pluck('name')
+                    ->toArray();
+
+                $role->syncPermissions($permissions);
+            }
+
+            DB::commit();
+            return redirect()->route('roles.index')->with('success', 'Role created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('roles.index')->with('error', 'Role creation failed: ' . $e->getMessage());
         }
-
-        return redirect()->route('roles.index')->with('success', 'Role added successfully.');
     }
 
 
@@ -93,17 +105,10 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function edit(Role $role)
     {
-        // Get names of permissions assigned to this role
-        $hasPermissions = $role->permissions->pluck('name');
-
-        // Retrieve all permissions for selection
         $permissions = Permission::all();
+        $hasPermissions = $role->permissions->pluck('name')->toArray();
 
-        return view('roles.form', [
-            'permissions'    => $permissions,
-            'hasPermissions' => $hasPermissions,
-            'role'           => $role,
-        ]);
+        return view('roles.form', compact('role', 'permissions', 'hasPermissions'));
     }
 
     /**
@@ -115,19 +120,32 @@ class RoleController extends Controller implements HasMiddleware
      * @param  App\Http\Requests\RoleRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(RoleRequest $request, Role $role)
+    public function update(RoleRequest $request, Role $role): RedirectResponse
     {
-        $role->name = $request->name;
-        $role->save();
+        DB::beginTransaction();
 
-        if ($request->filled('permissions')) {
-            $permissions = Permission::whereIn('id', $request->permissions)->pluck('name');
+        try {
+            // Update role name
+            $role->name = $request->name;
+            $saved = $role->save();
+
+            if (!$saved) {
+                throw new \Exception('Failed to update role');
+            }
+
+            // Sync permissions
+            $permissions = $request->filled('permissions')
+                ? Permission::whereIn('id', $request->permissions)->pluck('name')->toArray()
+                : [];
+
             $role->syncPermissions($permissions);
-        } else {
-            $role->syncPermissions([]);
-        }
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
+            DB::commit();
+            return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('roles.index')->with('error', 'Role update failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -147,12 +165,24 @@ class RoleController extends Controller implements HasMiddleware
                 ->with('error', 'Unauthorized action.');
         }
 
-        // Delete the role
-        $role->delete();
+        DB::beginTransaction();
 
-        // Redirect with success message
-        return redirect()
-            ->route('roles.index')
-            ->with('success', 'Role deleted successfully.');
+        try {
+            $deleted = $role->delete();
+
+            if (!$deleted) {
+                throw new \Exception('Failed to delete role');
+            }
+
+            DB::commit();
+            return redirect()
+                ->route('roles.index')
+                ->with('success', 'Role deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('roles.index')
+                ->with('error', 'Role deletion failed: ' . $e->getMessage());
+        }
     }
 }

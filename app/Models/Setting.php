@@ -9,8 +9,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Setting extends Model
 {
-    use LogsActivity, HasFactory,SoftDeletes;
+    use LogsActivity, HasFactory, SoftDeletes;
 
+    // type Constants
+    const TYPE_STRING = 'string';
+    const TYPE_BOOLEAN = 'boolean';
+    const TYPE_INTEGER = 'integer';
+    const TYPE_FLOAT = 'float';
+    const TYPE_ARRAY = 'array';
+    const TYPE_JSON = 'json';
+    const TYPE_IMAGE = 'image';
+
+    /**
+     * type options with their labels
+     */
+    public static $types = [
+        self::TYPE_STRING => 'string',
+        self::TYPE_BOOLEAN => 'boolean',
+        self::TYPE_INTEGER => 'integer',
+        self::TYPE_FLOAT => 'float',
+        self::TYPE_ARRAY => 'array',
+        self::TYPE_JSON => 'json',
+        self::TYPE_IMAGE => 'image',
+    ];
     /**
      * The attributes that are mass assignable.
      *

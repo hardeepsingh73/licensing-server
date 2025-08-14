@@ -7,9 +7,10 @@ use App\Services\SearchService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
-class EmailLogController extends Controller
+class EmailLogController extends Controller implements HasMiddleware
 {
     // SearchService instance for handling search functionality
     protected SearchService $searchService;

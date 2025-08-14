@@ -47,6 +47,7 @@ class UserController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:view users', only: ['index']),
             new Middleware('permission:create users', only: ['create', 'store']),
+            new Middleware('permission:edit users', only: ['edit', 'update']),
             new Middleware('permission:delete users', only: ['destroy']),
         ];
     }
@@ -57,18 +58,14 @@ class UserController extends Controller implements HasMiddleware
      * Uses RoleDataHelper to enforce role-based visibility restrictions.
      * Applies search filters via SearchService.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param App\Http\Requests\UserRequest $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
-        // Fetch all roles for filter dropdown or display
         $roles = Role::orderBy('name', 'ASC')->get();
-
-        // Get query builder with role-based user visibility from RoleDataHelper
         $query = RoleDataHelper::users(true);
 
-        // Apply search/filter for name, email, and role relationship via SearchService
         $users = $this->searchService->search(
             $query,
             [
@@ -116,10 +113,10 @@ class UserController extends Controller implements HasMiddleware
      *
      * Validates input, hashes password, assigns role, and uses transaction to ensure consistency.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param App\Http\Requests\UserRequest $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(UserRequest $request)
+    public function store(UserRequest $request): RedirectResponse
     {
         DB::beginTransaction();
 
@@ -130,8 +127,15 @@ class UserController extends Controller implements HasMiddleware
                 'password' => Hash::make($request->password),
             ]);
 
+            if (!$user) {
+                throw new \Exception('Failed to create user account');
+            }
+
             if ($request->filled('roles')) {
-                $user->assignRole($request->roles);
+                $roleAssigned = $user->assignRole($request->roles);
+                if (!$roleAssigned) {
+                    throw new \Exception('Failed to assign user role');
+                }
             }
 
             DB::commit();
@@ -139,10 +143,7 @@ class UserController extends Controller implements HasMiddleware
             return redirect()->route('users.index')->with('success', 'User created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return redirect()->route('users.create')
-                ->withInput()
-                ->withErrors(['error' => 'Something went wrong: ' . $e->getMessage()]);
+            return redirect()->route('users.index')->with('error', 'User creation failed: ' . $e->getMessage());
         }
     }
 
@@ -181,11 +182,11 @@ class UserController extends Controller implements HasMiddleware
      * Password update is optional.
      * Uses transaction and policy authorization.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param App\Http\Requests\UserRequest $request
      * @param string $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(UserRequest $request, User $user)
+    public function update(UserRequest $request, User $user): RedirectResponse
     {
         $this->authorize('manage', $user);
 
@@ -199,10 +200,16 @@ class UserController extends Controller implements HasMiddleware
                 $user->password = Hash::make($request->password);
             }
 
-            $user->save();
+            $saved = $user->save();
+            if (!$saved) {
+                throw new \Exception('Failed to update user account');
+            }
 
             if ($request->filled('roles')) {
-                $user->syncRoles([$request->roles]);
+                $rolesSynced = $user->syncRoles([$request->roles]);
+                if (!$rolesSynced) {
+                    throw new \Exception('Failed to update user roles');
+                }
             }
 
             DB::commit();
@@ -210,10 +217,7 @@ class UserController extends Controller implements HasMiddleware
             return redirect()->route('users.index')->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return redirect()->route('users.edit', $user->id)
-                ->withInput()
-                ->withErrors(['error' => 'Something went wrong: ' . $e->getMessage()]);
+            return redirect()->route('users.index')->with('error', 'User update failed: ' . $e->getMessage());
         }
     }
 
@@ -229,22 +233,31 @@ class UserController extends Controller implements HasMiddleware
 
     public function destroy(User $user): RedirectResponse
     {
-        // Authorization check via Gate
+        $this->authorize('manage', $user);
+
         if (Gate::denies('delete', $user)) {
             return redirect()
                 ->route('users.index')
                 ->with('error', 'Unauthorized action.');
         }
 
-        // Policy-based authorization (if you have 'manage' policy)
-        $this->authorize('manage', $user);
+        DB::beginTransaction();
 
-        // Soft delete user
-        $user->delete();
+        try {
+            $deleted = $user->delete();
+            if (!$deleted) {
+                throw new \Exception('Failed to delete user');
+            }
 
-        // Redirect back to index with success message
-        return redirect()
-            ->route('users.index')
-            ->with('success', 'User deleted successfully.');
+            DB::commit();
+            return redirect()
+                ->route('users.index')
+                ->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'User deletion failed: ' . $e->getMessage());
+        }
     }
 }

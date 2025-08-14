@@ -28,4 +28,23 @@ class RoleRequest extends FormRequest
             'permissions.*' => ['integer', 'exists:permissions,id'],
         ];
     }
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'The role name is required.',
+            'name.min' => 'The role name must be at least :min characters.',
+            'name.unique' => 'This role name is already in use.',
+            'permissions.array' => 'The permissions must be provided as an array.',
+            'permissions.*.integer' => 'Each permission ID must be an integer.',
+            'permissions.*.exists' => 'One or more selected permissions are invalid.',
+        ];
+    }
+    public function attributes(): array
+    {
+        return [
+            'name' => 'role name',
+            'permissions' => 'permissions',
+            'permissions.*' => 'permission'
+        ];
+    }
 }
