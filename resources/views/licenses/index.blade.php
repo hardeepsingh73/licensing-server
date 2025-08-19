@@ -97,7 +97,6 @@
                                 <td class="ps-4">
                                     <div>
                                         <h6 class="mb-0 text-break">{{ $license->key }}</h6>
-                                        <small class="text-muted">ID: {{ $license->id }}</small>
                                     </div>
                                 </td>
                                 <td>

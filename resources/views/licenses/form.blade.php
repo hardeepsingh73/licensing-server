@@ -58,7 +58,7 @@
                         <div class="input-group">
                             <input type="text" name="key" id="key"
                                 class="form-control @error('key') is-invalid @enderror" placeholder="Enter license key"
-                                value="{{ old('key', $license->key ?? '') }}" {{ isset($license) ? 'readonly' : '' }}>
+                                value="{{ old('key', $license->key ?? '') }}" readonly>
                             @if (!isset($license))
                                 <button type="button" class="btn btn-outline-secondary" id="generateKey">
                                     <i class="bi bi-lightning me-1"></i> Generate
