@@ -5,6 +5,7 @@ use App\Http\Controllers\ApiLogController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ErrorLogController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\LoginHistoryController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
@@ -91,6 +92,18 @@ Route::middleware('auth')->group(function () {
         Route::match(['get', 'post'], '/', [ApiLogController::class, 'index'])->name('index');
         Route::get('/{apiLog}', [ApiLogController::class, 'show'])->name('show');
         Route::post('/clear', [ApiLogController::class, 'clear'])->name('clear');
+    });
+
+    Route::prefix('licenses')->name('licenses.')->group(function () {
+        Route::match(['get', 'post'], '/', [LicenseController::class, 'index'])->name('index');
+        Route::get('/create', [LicenseController::class, 'create'])->name('create');
+        Route::post('/store', [LicenseController::class, 'store'])->name('store');
+        Route::get('/{license}', [LicenseController::class, 'show'])->name('show');
+        Route::get('/{license}/edit', [LicenseController::class, 'edit'])->name('edit');
+        Route::put('/{license}', [LicenseController::class, 'update'])->name('update');
+        Route::delete('/{license}', [LicenseController::class, 'destroy'])->name('destroy');
+        Route::post('/{license}/revoke', [LicenseController::class, 'revokeKey'])->name('revoke');
+        Route::post('/check-key', [LicenseController::class, 'checkKeyUniqueness'])->name('checkKey');
     });
 });
 Route::middleware(['auth', 'is_superadmin'])->group(function () {

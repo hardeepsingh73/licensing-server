@@ -21,7 +21,7 @@ class UsersSeeder extends Seeder
 
         // ------- SuperAdmin Account -------
         $superadmin = User::firstOrCreate(
-            ['email' => 'superadmin@example.com'],
+            ['email' => 'superadmin@licensing.com'],
             [
                 'name' => 'SuperAdmin User',
                 'password' => Hash::make('password123!'),
@@ -30,32 +30,7 @@ class UsersSeeder extends Seeder
         );
 
         $superadmin->syncRoles('superadmin');
-
-        // ------- Admin Account -------
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Admin User',
-                'password' => Hash::make('password123!'),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $admin->syncRoles('admin');
-
-        // ------- Regular User -------
-        $user = User::firstOrCreate(
-            ['email' => 'user@example.com'],
-            [
-                'name' => 'Regular User',
-                'password' => Hash::make('password123!'),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $user->syncRoles('user');
-
-        $this->command->info(' Default superadmin,admin and user accounts seeded successfully.');
+        $this->command->info(' Default superadmin account seeded successfully.');
     }
 
     /**

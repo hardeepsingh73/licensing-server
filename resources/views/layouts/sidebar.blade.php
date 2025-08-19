@@ -78,7 +78,17 @@
                     </a>
                 </li>
             @endcan
-
+            
+            <!-- License -->
+            @can('view licenses')
+                <li class="{{ request()->routeIs('licenses.*') ? 'active' : '' }}">
+                    <a href="{{ route('licenses.index') }}"
+                        class="list-group-item list-group-item-action d-flex align-items-center {{ request()->routeIs('licenses.*') ? 'active fw-semibold' : '' }}">
+                        <i class="bi bi-key me-2 fs-5"></i>
+                        <span>License</span>
+                    </a>
+                </li>
+            @endcan
             <!-- ===================== LOGS ===================== -->
             <li class="px-3 pt-3 pb-2">
                 <span class="text-uppercase small fw-bold text-muted">Logs</span>

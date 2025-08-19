@@ -62,6 +62,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'clear login history',
                 'view email logs',
                 'clear email logs',
+                'view api logs',
+                'clear api logs',
 
                 // Basic
                 'view dashboard',
@@ -78,23 +80,6 @@ class RolesAndPermissionsSeeder extends Seeder
             // Super Admin - all permissions
             $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
             $superadmin->syncPermissions(Permission::all());
-
-            // Admin - restricted permissions
-            $admin = Role::firstOrCreate(['name' => 'admin']);
-            $admin->syncPermissions([
-                'create users',
-                'delete users',
-                'edit users',
-                'view users',
-                'view dashboard',
-                'view activity logs',
-                'view error logs',
-                'view login history',
-            ]);
-
-            // Regular User - minimal permissions
-            $user = Role::firstOrCreate(['name' => 'user']);
-            $user->syncPermissions(['view dashboard']);
         });
 
         $this->command->info(' Roles and permissions seeded successfully.');

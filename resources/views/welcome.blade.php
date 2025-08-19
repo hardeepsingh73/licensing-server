@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <h1>this is a heading </h1>
-
-
+    <div class='container'>
+        <h1>{{ setting('site_name', 'Laravel') }} </h1>
+    </div>
 </x-guest-layout>

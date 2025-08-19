@@ -26,10 +26,22 @@
                 <h5 class="mb-0">API Logs</h5>
                 <p class="text-muted mb-0 small">Track all API requests and responses</p>
             </div>
-            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
-                data-bs-target="#listSearchForm" aria-expanded="false" aria-controls="listSearchForm">
-                <i class="bi bi-search me-1"></i> Search
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                @can('clear api logs')
+                    <form id="clear-api-logs-form" action="{{ route('api-logs.clear') }}" method="POST"
+                        class="mb-0 clearLogs">
+                        @csrf
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash3-fill me-1"></i> Clear Logs
+                        </button>
+                    </form>
+                @endcan
+
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#listSearchForm" aria-expanded="false" aria-controls="listSearchForm">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
         </div>
 
         {{-- Card Body --}}
@@ -127,8 +139,7 @@
                                 <td>{{ $log->ip_address }}</td>
                                 <td>{{ $log->created_at->format('d M Y H:i') }}</td>
                                 <td>
-                                    <a href="{{ route('api-logs.show', $log->id) }}"
-                                        class="btn btn-info btn-sm">
+                                    <a href="{{ route('api-logs.show', $log->id) }}" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                 </td>

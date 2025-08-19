@@ -116,6 +116,28 @@
                 });
             @endif
 
+            $(document).ready(function() {
+                // Initialize tooltips
+                $('[data-bs-toggle="tooltip"]').each(function() {
+                    new bootstrap.Tooltip(this);
+                });
+
+                // Show Filters if search params exist
+                @if (request()->hasAny([
+                        'user_id',
+                        'login_at',
+                        'endpoint',
+                        'method',
+                        'ip_address',
+                        'key',
+                        'group',
+                        'name',
+                        'email',
+                        'role',
+                    ]))
+                    new bootstrap.Collapse($('#listSearchForm')[0]).show();
+                @endif
+            });
         });
     </script>
 </body>

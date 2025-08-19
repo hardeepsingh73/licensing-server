@@ -163,22 +163,4 @@
             @endif
         </div>
     </div>
-
-    <x-slot name="script">
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                $(function() {
-                    // Auto-show search if filters are applied
-                    @if (request()->hasAny(['key', 'group']))
-                        $('#listSearchForm').collapse('show');
-                    @endif
-
-                    // Initialize tooltips
-                    $('[data-bs-toggle="tooltip"]').each(function() {
-                        new bootstrap.Tooltip(this);
-                    });
-                });
-            });
-        </script>
-    </x-slot>
 </x-app-layout>

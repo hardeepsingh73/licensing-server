@@ -27,7 +27,7 @@
             <h2 class="h5 mb-0 fw-semibold">All System Users</h2>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#userFilters" aria-expanded="false">
+                    data-bs-target="#listSearchForm" aria-expanded="false">
                     <i class="bi bi-funnel me-1"></i> Filter
                 </button>
                 @can('create users')
@@ -39,7 +39,7 @@
         </div>
 
         <!-- Filter Section -->
-        <div class="collapse" id="userFilters">
+        <div class="collapse" id="listSearchForm">
             <div class="p-3 border-bottom">
                 <form method="POST" action="{{ route('users.index') }}">
                     @csrf
@@ -89,26 +89,13 @@
                             <th>Email</th>
                             <th>Role(s)</th>
                             <th>Status</th>
-                            <th>Last Active</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($users as $user)
                             <tr>
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="symbol symbol-40px">
-                                            <span class="symbol-label bg-light-primary text-primary fs-5 fw-semibold">
-                                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0">{{ $user->name }}</h6>
-                                            <small class="text-muted">ID: {{ $user->id }}</small>
-                                        </div>
-                                    </div>
-                                </td>
+                                <td class="ps-4"> {{ $user->name }}</td>
                                 <td class="text-truncate" style="max-width:200px;">{{ $user->email }}</td>
                                 <td>
                                     @foreach ($user->roles as $role)
@@ -126,13 +113,6 @@
                                         <span class="badge rounded-pill bg-warning">
                                             <i class="bi bi-exclamation-circle-fill me-1"></i> Unverified
                                         </span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($user->last_login_at)
-                                        {{ $user->last_login_at->diffForHumans() }}
-                                    @else
-                                        <span class="text-muted">Never</span>
                                     @endif
                                 </td>
                                 <td class="text-end pe-4">
@@ -192,22 +172,4 @@
             @endif
         </div>
     </div>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                $(document).ready(function() {
-                    // Initialize tooltips
-                    $('[data-bs-toggle="tooltip"]').each(function() {
-                        new bootstrap.Tooltip(this);
-                    });
-
-                    // Show Filters if search params exist
-                    @if (request()->hasAny(['name', 'email', 'role']))
-                        new bootstrap.Collapse($('#userFilters')[0]).show();
-                    @endif
-                });
-            });
-        </script>
-    @endpush
 </x-app-layout>
