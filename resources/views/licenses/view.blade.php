@@ -87,7 +87,7 @@
             @endcan
 
             @can('delete licenses')
-                @if ($license->status != \App\Models\LicenseKey::STATUS_REISSUE)
+                @if ($license->status !== \App\Models\LicenseKey::STATUS_REISSUE)
                     <form action="{{ route('licenses.reissue', $license) }}" method="POST" id="reissue-form"
                         class="d-inline">
                         @csrf
