@@ -110,7 +110,7 @@
                                         <span
                                             class="badge bg-warning text-dark">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
                                     @else
-                                        <span class="badge bg-secondary">Unknown</span>
+                                        <span class="badge bg-secondary">Unknown{{$license->status}}</span>
                                     @endif
                                 </td>
                                 <td>{{ $license->activation_limit }}</td>
