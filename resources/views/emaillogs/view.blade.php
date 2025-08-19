@@ -51,7 +51,7 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <h6 class="text-muted small mb-1">Status</h6>
-                        <span class="badge bg-{{ $emailLog->status === 'sent' ? 'success' : 'danger' }}">
+                        <span class="badge bg-{{ $emailLog->status === consthelper('EmailLog::STATUS_SENT') ? 'success' : 'danger' }}">
                             {{ ucfirst($emailLog->status) }}
                         </span>
                     </div>

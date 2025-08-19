@@ -88,10 +88,10 @@ class LogSentEmail
             $content = '';
 
             foreach ($parts as $part) {
-                if ($part->getMediaType() === 'text' && $part->getMediaSubtype() === 'html') {
+                if ($part->getMediaType() === EmailLog::TYPE_TEXT && $part->getMediaSubtype() === EmailLog::TYPE_HTML) {
                     return $part->getBody();
                 }
-                if ($part->getMediaType() === 'text' && $part->getMediaSubtype() === 'plain') {
+                if ($part->getMediaType() === EmailLog::TYPE_TEXT && $part->getMediaSubtype() === EmailLog::TYPE_PLAIN) {
                     $content = $part->getBody();
                 }
             }

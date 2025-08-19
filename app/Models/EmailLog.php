@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class EmailLog extends Model
 {
     use SoftDeletes;
+
+    const STATUS_SENT = 'sent';
+    const TYPE_TEXT = 'text';
+    const TYPE_PLAIN = 'plain';
+    const TYPE_HTML = 'html';
     /**
      * The attributes that are mass assignable.
      * Only these fields can be filled via mass assignment (e.g., EmailLog::create()).
