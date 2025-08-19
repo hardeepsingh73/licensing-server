@@ -76,7 +76,7 @@
                 </a>
             @endcan
             @can('delete licenses')
-                @if ($license->status !== consthelper('LicenseKey::STATUS_REVOKED'))
+                @if ($license->status != consthelper('LicenseKey::STATUS_REVOKED'))
                     <form action="{{ route('licenses.revoke', $license) }}" method="POST" id="revoke-form"
                         class="d-inline">
                         @csrf

@@ -213,7 +213,7 @@ class LicenseController extends Controller implements HasMiddleware
 
         $license = LicenseKey::where('key', $request->input('key'))->first();
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
+        if (!$license || $license->status != LicenseKey::STATUS_ACTIVE) {
             return redirect()->back()->withErrors(['error' => 'Invalid or inactive license key']);
         }
 

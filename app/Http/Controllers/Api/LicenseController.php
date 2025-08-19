@@ -38,7 +38,7 @@ class LicenseController extends Controller implements HasMiddleware
         $key = $request->input('key');
         $license = LicenseKey::where('key', $key)->first();
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
+        if (!$license || $license->status != LicenseKey::STATUS_ACTIVE) {
             return response()->json(['valid' => false, 'message' => 'Invalid or inactive key'], 403);
         }
 
@@ -61,7 +61,7 @@ class LicenseController extends Controller implements HasMiddleware
         $deviceId = $request->input('device_id');
         $license = LicenseKey::where('key', $key)->first();
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
+        if (!$license || $license->status != LicenseKey::STATUS_ACTIVE) {
             return response()->json(['activated' => false, 'message' => 'Invalid key'], 403);
         }
         if ($license->expires_at && Carbon::now()->gt($license->expires_at)) {
