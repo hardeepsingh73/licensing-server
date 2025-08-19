@@ -45,7 +45,8 @@ class LicenseKey extends Model
 
     public function getStatusBadgeClassAttribute()
     {
-        dd($this->status);
+        $status = $this->attributes['status'] ?? null;
+        dd($status);
         return match ($this->status) {
             self::STATUS_ACTIVE  => 'bg-success',
             self::STATUS_REISSUE => 'bg-danger',
