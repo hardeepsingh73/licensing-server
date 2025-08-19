@@ -174,10 +174,10 @@
                                     `<textarea name="value" id="value" class="form-control" rows="3" >${currentValue}</textarea>`;
                                 break;
 
-                            case 'image':
+                            case '{{ consthelper('Setting::TYPE_IMAGE') }}':
                                 html += `<div>
                     <input type="file" name="value" id="value" class="form-control" >
-                    @if (isset($setting) && $setting->type === 'image' && $setting->value)
+                    @if (isset($setting) && $setting->type === consthelper('Setting::TYPE_IMAGE') && $setting->value)
                         <div class="mt-2">
                             <img src="{{ Storage::url($setting->value) }}" alt="Current image" style="max-height: 100px;">
                             <div class="form-check mt-2">
@@ -189,17 +189,20 @@
                 </div>`;
                                 break;
 
-                            case 'array':
-                            case 'json':
+                            case '{{ consthelper('Setting::TYPE_ARRAY') }}':
+                            case '{{ consthelper('Setting::TYPE_JSON') }}':
                                 html += `<textarea name="value" id="value" class="form-control" rows="3" >${currentValue}</textarea>
                     <small class="text-muted">
-                        ${type === 'array' ? 'Comma-separated, e.g. value1,value2,value3' : 'Valid JSON string'}
+                        ${type === '{{ consthelper('Setting::TYPE_ARRAY') }}' ? 'Comma-separated, e.g. value1,value2,value3' : 'Valid JSON string'}
                     </small>`;
                                 break;
 
                             default: // string, integer, float
-                                const inputType = (type === 'integer' || type === 'float') ? 'number' : 'text';
-                                const step = (type === 'float') ? 'any' : '1';
+                                const inputType = (type === '{{ consthelper('Setting::TYPE_INTEGER') }}' ||
+                                        type === '{{ consthelper('Setting::TYPE_FLOAT') }}') ? 'number' :
+                                    'text';
+                                const step = (type === '{{ consthelper('Setting::TYPE_FLOAT') }}') ? 'any' :
+                                    '1';
                                 html += `<input type="${inputType}" name="value" id="value" class="form-control"
                     value="${currentValue}" ${inputType === 'number' ? `step="${step}"` : ''} >`;
                         }

@@ -64,9 +64,9 @@
                                                 @endif
                                             </label>
                                             <div class="col-md-9">
-                                                @if ($setting->type === 'text')
+                                                @if ($setting->type === consthelper('Setting::TYPE_TEXT'))
                                                     <textarea class="form-control" id="setting-{{ $setting->key }}" name="settings[{{ $setting->key }}]" rows="3">{{ old('settings.' . $setting->key, $setting->value) }}</textarea>
-                                                @elseif ($setting->type === 'boolean')
+                                                @elseif ($setting->type === consthelper('Setting::TYPE_BOOLEAN'))
                                                     <div class="form-check form-switch">
                                                         <input type="hidden" name="settings[{{ $setting->key }}]"
                                                             value="0">
@@ -79,7 +79,7 @@
                                                             {{ $setting->value ? 'Enabled' : 'Disabled' }}
                                                         </label>
                                                     </div>
-                                                @elseif ($setting->type === 'image')
+                                                @elseif ($setting->type === consthelper('Setting::TYPE_IMAGE'))
                                                     <div class="image-upload-container">
                                                         <input type="file" class="form-control mb-2"
                                                             id="setting-{{ $setting->key }}"
@@ -97,11 +97,11 @@
                                                     </div>
                                                 @else
                                                     <input
-                                                        type="{{ $setting->type === 'integer' ? 'number' : 'text' }}"
+                                                        type="{{ $setting->type === consthelper('Setting::TYPE_INTEGER') ? 'number' : 'text' }}"
                                                         class="form-control" id="setting-{{ $setting->key }}"
                                                         name="settings[{{ $setting->key }}]"
                                                         value="{{ old('settings.' . $setting->key, $setting->value) }}"
-                                                        @if ($setting->type === 'integer') step="1" @endif>
+                                                        @if ($setting->type === consthelper('Setting::TYPE_INTEGER')) step="1" @endif>
                                                 @endif
                                             </div>
                                         </div>

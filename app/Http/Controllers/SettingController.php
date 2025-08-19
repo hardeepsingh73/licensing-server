@@ -97,7 +97,7 @@ class SettingController extends Controller implements HasMiddleware
         ]);
 
         // Handle image file upload if the setting type is 'image'
-        if ($request->type === 'image') {
+        if ($request->type === Setting::TYPE_IMAGE) {
             $validated['value'] = $this->handleImageUpload($request);
         } else {
             // For other types, accept value as-is (consider further type casting in model/helper)
@@ -143,7 +143,7 @@ class SettingController extends Controller implements HasMiddleware
             'description' => 'nullable|string|max:255',
         ]);
 
-        if ($request->type === 'image') {
+        if ($request->type === Setting::TYPE_IMAGE) {
             // If user requested to remove the existing image
             if ($request->has('remove_image') && $setting->value) {
                 Storage::disk('public')->delete($setting->value);
@@ -155,7 +155,7 @@ class SettingController extends Controller implements HasMiddleware
             }
         } else {
             // If changing from image to other type, delete old image file if exists
-            if ($setting->type === 'image' && $setting->value) {
+            if ($setting->type === Setting::TYPE_IMAGE && $setting->value) {
                 Storage::disk('public')->delete($setting->value);
             }
 
@@ -204,7 +204,7 @@ class SettingController extends Controller implements HasMiddleware
                 continue; // Skip unknown keys gracefully
             }
 
-            if ($setting->type === 'image') {
+            if ($setting->type === Setting::TYPE_IMAGE) {
                 // Compose the input field name dynamically for file input
                 $fileField = "settings.$key";
 
@@ -233,7 +233,7 @@ class SettingController extends Controller implements HasMiddleware
     public function destroy(Setting $setting): RedirectResponse
     {
         // Remove physical image file if applicable before deleting DB record
-        if ($setting->type === 'image' && $setting->value) {
+        if ($setting->type === Setting::TYPE_IMAGE && $setting->value) {
             Storage::disk('public')->delete($setting->value);
         }
 

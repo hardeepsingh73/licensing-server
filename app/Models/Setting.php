@@ -19,6 +19,12 @@ class Setting extends Model
     const TYPE_ARRAY = 'array';
     const TYPE_JSON = 'json';
     const TYPE_IMAGE = 'image';
+    const TYPE_BOOL    = 'bool';
+    const TYPE_INT     = 'int';
+    const TYPE_TEXT  = 'text';
+    const TYPE_OBJECT  = 'object';
+    const TYPE_DOUBLE  = 'double';
+    const DEFAULT_GROUP  = 'general';
 
     /**
      * type options with their labels

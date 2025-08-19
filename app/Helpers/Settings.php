@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Setting;
+use phpDocumentor\Reflection\Types\Self_;
 
 class Settings
 {
@@ -40,27 +41,27 @@ class Settings
 
         // Type cast the value based on $setting->type
         switch ($setting->type) {
-            case 'boolean':
-            case 'bool':
+            case Setting::TYPE_BOOLEAN:
+            case Setting::TYPE_BOOL:
                 return filter_var($setting->value, FILTER_VALIDATE_BOOLEAN);
 
-            case 'int':
-            case 'integer':
+            case Setting::TYPE_INT:
+            case Setting::TYPE_INTEGER:
                 return (int) $setting->value;
 
-            case 'float':
-            case 'double':
+            case Setting::TYPE_FLOAT:
+            case Setting::TYPE_DOUBLE:
                 return (float) $setting->value;
 
-            case 'array':
+            case Setting::TYPE_ARRAY:
                 // Stored as comma-separated string, convert to array
                 return explode(',', $setting->value);
 
-            case 'json':
+            case Setting::TYPE_JSON:
                 // Decode JSON into an associative array
                 return json_decode($setting->value, true);
 
-            case 'string':
+            case Setting::TYPE_STRING:
             default:
                 // Default is raw string
                 return $setting->value;
@@ -82,7 +83,7 @@ class Settings
      * @param  string  $group  The group/category name (default: 'general')
      * @return \App\Models\Setting
      */
-    public static function set($key, $value, $type = 'string', $group = 'general')
+    public static function set($key, $value, $type = Setting::TYPE_STRING, $group = Setting::DEFAULT_GROUP)
     {
         // Find existing setting or prepare a new one
         $setting = Setting::firstOrNew(['key' => $key]);
