@@ -116,7 +116,10 @@
                                     </span>
 
                                     {{-- Deleted → Restore --}}
-                                    @if ($activityLog->event === consthelper('ActivityLog::EVENT_DELETED') && method_exists($subject, 'trashed') && $subject->trashed())
+                                    @if (
+                                        $activityLog->event === consthelper('ActivityLog::EVENT_DELETED') &&
+                                            method_exists($subject, 'trashed') &&
+                                            $subject->trashed())
                                         <form action="{{ route('activity-logs.restore', $activityLog->id) }}"
                                             method="POST" class="d-inline">
                                             @csrf
@@ -219,7 +222,7 @@
 
                 <!-- Footer -->
                 <div class="card-footer bg-white text-end py-4">
-                    <a href="{{ route('activity-logs.index') }}" class="btn btn-secondary btn-sm">
+                    <a href="{{ route('activity-logs.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i> Back to Logs
                     </a>
                 </div>
