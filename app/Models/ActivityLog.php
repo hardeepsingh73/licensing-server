@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ActivityLog extends Model
 {
     use SoftDeletes;
+
+    const EVENT_CREATED  = 'created';
+    const EVENT_UPDATED  = 'updated';
+    const EVENT_DELETED  = 'deleted';
+    const EVENT_RESTORED = 'restored';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -78,7 +84,7 @@ class ActivityLog extends Model
     public function scopeForSubject($query, $subject)
     {
         return $query->where('subject_id', $subject->id)
-                     ->where('subject_type', get_class($subject));
+            ->where('subject_type', get_class($subject));
     }
 
     /**
@@ -91,6 +97,6 @@ class ActivityLog extends Model
     public function scopeForCauser($query, $causer)
     {
         return $query->where('causer_id', $causer->id)
-                     ->where('causer_type', get_class($causer));
+            ->where('causer_type', get_class($causer));
     }
 }

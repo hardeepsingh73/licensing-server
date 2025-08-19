@@ -97,13 +97,13 @@ trait LogsActivity
     {
         $properties = [];
 
-        if ($event === 'updated') {
+        if ($event === ActivityLog::EVENT_UPDATED) {
             // Show old and new attribute values excluding hidden
             $properties = [
                 'old'        => Arr::except($this->getOriginal(), $this->getHidden()),
                 'attributes' => Arr::except($this->getChanges(), $this->getHidden()),
             ];
-        } elseif ($event === 'created' || $event === 'deleted') {
+        } elseif ($event === ActivityLog::EVENT_CREATED || $event === ActivityLog::EVENT_DELETED) {
             // Show all current attributes excluding hidden ones
             $properties = [
                 'attributes' => Arr::except($this->getAttributes(), $this->getHidden()),

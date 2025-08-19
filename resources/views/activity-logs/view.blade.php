@@ -116,7 +116,7 @@
                                     </span>
 
                                     {{-- Deleted → Restore --}}
-                                    @if ($activityLog->event === 'deleted' && method_exists($subject, 'trashed') && $subject->trashed())
+                                    @if ($activityLog->event === consthelper('ActivityLog::EVENT_DELETED') && method_exists($subject, 'trashed') && $subject->trashed())
                                         <form action="{{ route('activity-logs.restore', $activityLog->id) }}"
                                             method="POST" class="d-inline">
                                             @csrf
@@ -128,7 +128,7 @@
                                     @endif
 
                                     {{-- Updated → Revert --}}
-                                    @if ($activityLog->event === 'updated')
+                                    @if ($activityLog->event === consthelper('ActivityLog::EVENT_UPDATED'))
                                         <form action="{{ route('activity-logs.restore', $activityLog->id) }}"
                                             method="POST" class="d-inline">
                                             @csrf

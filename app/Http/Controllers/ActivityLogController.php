@@ -174,7 +174,7 @@ class ActivityLogController extends Controller implements HasMiddleware
         }
 
         // Handle Deleted Event
-        if ($activityLog->event === 'deleted') {
+        if ($activityLog->event === ActivityLog::EVENT_DELETED) {
             if (!in_array(SoftDeletes::class, class_uses_recursive($modelClass))) {
                 return redirect()->back()->with('error', 'This model does not support restoring.');
             }
@@ -189,7 +189,7 @@ class ActivityLogController extends Controller implements HasMiddleware
         }
 
         // Handle Updated Event - revert to old properties
-        if ($activityLog->event === 'updated') {
+        if ($activityLog->event === ActivityLog::EVENT_UPDATED) {
             $model = $modelClass::find($modelId);
             if (!$model) {
                 return redirect()->back()->with('error', 'Record not found.');
