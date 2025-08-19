@@ -11,7 +11,7 @@ class LicenseKey extends Model
     use SoftDeletes, LogsActivity;
 
     // Status Constants
-    const STATUS_ACTIVE = 1;
+    const STATUS_ACTIVE  = 1;
     const STATUS_REISSUE = 2;
     const STATUS_EXPIRED = 3;
 
@@ -19,15 +19,22 @@ class LicenseKey extends Model
      * Status options with their labels
      */
     public static $statuses = [
-        self::STATUS_ACTIVE => 'Active',
+        self::STATUS_ACTIVE  => 'Active',
         self::STATUS_REISSUE => 'Reissued',
         self::STATUS_EXPIRED => 'Expired',
     ];
 
-    protected $fillable = ['user_id', 'key', 'status', 'activation_limit', 'activations', 'expires_at'];
+    protected $fillable = [
+        'user_id',
+        'key',
+        'status',
+        'activation_limit',
+        'activations',
+        'expires_at'
+    ];
 
     protected $casts = [
-        'expires_at' => 'date'
+        'expires_at' => 'date',
     ];
 
     public function activations()
@@ -43,11 +50,14 @@ class LicenseKey extends Model
         return self::$statuses[$this->status] ?? 'Unknown';
     }
 
+    /**
+     * Get status badge CSS class for Bootstrap
+     */
     public function getStatusBadgeClassAttribute()
     {
         $status = $this->getAttribute('status');
-        dd($status);
-        return match ($this->status) {
+
+        return match ($status) {
             self::STATUS_ACTIVE  => 'bg-success',
             self::STATUS_REISSUE => 'bg-danger',
             self::STATUS_EXPIRED => 'bg-warning text-dark',
@@ -62,6 +72,7 @@ class LicenseKey extends Model
     {
         return $this->status == self::STATUS_ACTIVE;
     }
+
     public function user()
     {
         return $this->belongsTo(User::class);
