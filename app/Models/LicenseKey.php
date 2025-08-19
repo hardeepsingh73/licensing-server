@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 class LicenseKey extends Model
 {
@@ -56,6 +57,7 @@ class LicenseKey extends Model
     public function getStatusBadgeClassAttribute()
     {
         $status = $this->getAttribute('status');
+        Log::debug('LicenseKey status value', ['status' => $status]);
 
         return match ($status) {
             self::STATUS_ACTIVE  => 'bg-success',
