@@ -12,7 +12,7 @@ class LicenseKey extends Model
 
     // Status Constants
     const STATUS_ACTIVE = 1;
-    const STATUS_REVOKED = 2;
+    const STATUS_REISSUE = 2;
     const STATUS_EXPIRED = 3;
 
     /**
@@ -20,10 +20,11 @@ class LicenseKey extends Model
      */
     public static $statuses = [
         self::STATUS_ACTIVE => 'Active',
-        // self::STATUS_REVOKED => 'Revoked',
+        self::STATUS_REISSUE => 'Reissued',
         self::STATUS_EXPIRED => 'Expired',
     ];
-    protected $fillable = ['key', 'status', 'activation_limit', 'activations', 'expires_at'];
+
+    protected $fillable = ['user_id', 'key', 'status', 'activation_limit', 'activations', 'expires_at'];
 
     protected $casts = [
         'expires_at' => 'date'
@@ -42,11 +43,25 @@ class LicenseKey extends Model
         return self::$statuses[$this->status] ?? 'Unknown';
     }
 
+    public function getStatusBadgeClassAttribute()
+    {
+        return match ($this->status) {
+            self::STATUS_ACTIVE  => 'bg-success',
+            self::STATUS_REISSUE => 'bg-danger',
+            self::STATUS_EXPIRED => 'bg-warning text-dark',
+            default => 'bg-secondary',
+        };
+    }
+
     /**
      * Check if LicenseKey is active
      */
     public function isActive()
     {
         return $this->status == self::STATUS_ACTIVE;
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

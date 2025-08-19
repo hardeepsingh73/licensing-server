@@ -42,12 +42,24 @@
                 <form method="POST" action="{{ route('licenses.index') }}">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small">License Key</label>
                             <input type="text" name="key" class="form-control" placeholder="Search by key"
                                 value="{{ request('key') }}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="form-label small">User</label>
+                            <select name="user_id" class="form-select">
+                                <option value="">All Users</option>
+                                @foreach ($users as $user)
+                                    <option value="{{ $user->id }}"
+                                        {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }} ({{ $user->email }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label small">Status</label>
                             <select name="status" class="form-select">
                                 <option value="">All Statuses</option>
@@ -59,7 +71,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small">Expiry At</label>
                             <input type="date" name="expires_at" class="form-control"
                                 value="{{ request('expires_at') }}">
@@ -84,6 +96,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">License Key</th>
+                            <th>User</th>
                             <th>Status</th>
                             <th>Activation Limit</th>
                             <th>Activations Used</th>
@@ -100,18 +113,18 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @if ($license->status == consthelper('LicenseKey::STATUS_ACTIVE'))
-                                        <span
-                                            class="badge bg-success">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                                    @elseif($license->status == consthelper('LicenseKey::STATUS_REVOKED'))
-                                        <span
-                                            class="badge bg-danger">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                                    @elseif($license->status == consthelper('LicenseKey::STATUS_EXPIRED'))
-                                        <span
-                                            class="badge bg-warning text-dark">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
+                                    @if ($license->user)
+                                        <span class="fw-semibold">{{ $license->user->name }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ $license->user->email }}</small>
                                     @else
-                                        <span class="badge bg-secondary">Unknown</span>
+                                        <span class="text-muted">Unassigned</span>
                                     @endif
+                                </td>
+                                <td>
+                                    <span class="badge {{ $license->status_badge_class }}">
+                                        {{ $license->status_label }}
+                                    </span>
                                 </td>
                                 <td>{{ $license->activation_limit }}</td>
                                 <td>{{ $license->activations }}</td>
@@ -153,7 +166,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <i class="bi bi-key fs-1 text-muted"></i>
                                     <h5 class="mt-3">No licenses found</h5>
                                     <p class="text-muted">Try adjusting your search filters</p>

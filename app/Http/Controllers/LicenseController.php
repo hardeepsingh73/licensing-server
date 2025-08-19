@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LicenseKeyRequest;
 use App\Models\LicenseKey;
 use App\Models\LicenseActivation;
+use App\Models\User;
 use App\Services\SearchService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -62,18 +63,19 @@ class LicenseController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-
         $licenses = $this->searchService->search(
-            LicenseKey::query(),
+            LicenseKey::with('user'),
             [
                 'key',
                 'status' => '=',
-                'expires_at' => '='
+                'expires_at' => '=',
+                'user_id' => '=', // allow filtering by user
             ],
             $request
         )->latest()->paginate(10);
 
-        return view('licenses.index', compact('licenses'));
+        $users = User::all(['id', 'name', 'email']);
+        return view('licenses.index', compact('licenses', 'users'));
     }
 
     /**
@@ -83,7 +85,8 @@ class LicenseController extends Controller implements HasMiddleware
      */
     public function create()
     {
-        return view('licenses.form');
+        $users = User::all(['id', 'name', 'email']);
+        return view('licenses.form', compact('users'));
     }
 
     /**
@@ -99,7 +102,7 @@ class LicenseController extends Controller implements HasMiddleware
         DB::beginTransaction();
 
         try {
-            $license = LicenseKey::create($request->validated());
+            LicenseKey::create($request->validated());
 
             DB::commit();
 
@@ -136,8 +139,8 @@ class LicenseController extends Controller implements HasMiddleware
     public function edit(LicenseKey $license)
     {
         // $this->authorize('update', $license);
-
-        return view('licenses.form', compact('license'));
+        $users = User::all(['id', 'name', 'email']);
+        return view('licenses.form', compact('license', 'users'));
     }
 
     /**
@@ -245,11 +248,11 @@ class LicenseController extends Controller implements HasMiddleware
     }
 
     /**
-     * Revoke a license key, mark it revoked and delete all activations.
+     * Revoke a license key, mark it reissued and delete all activations.
      *
      * Performs authorization and transaction-safe update.
      *
-     * @param LicenseKey $license License to revoke.
+     * @param LicenseKey $license License to reissue.
      * @return RedirectResponse Redirect with status message.
      */
     public function revokeKey(LicenseKey $license): RedirectResponse
@@ -259,13 +262,13 @@ class LicenseController extends Controller implements HasMiddleware
         DB::beginTransaction();
 
         try {
-            $license->status = LicenseKey::STATUS_REVOKED;
+            $license->status = LicenseKey::STATUS_REISSUE;
             $license->save();
             $license->activations()->delete();
 
             DB::commit();
 
-            return redirect()->route('licenses.index')->with('success', 'License revoked and activations cleared.');
+            return redirect()->route('licenses.index')->with('success', 'License reissued and activations cleared.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -290,6 +293,9 @@ class LicenseController extends Controller implements HasMiddleware
         return view('licenses.devices', compact('license', 'devices'));
     }
 
+    /**
+     * Check uniqueness of license key (AJAX).
+     */
     public function checkKeyUniqueness(Request $request)
     {
         $key = $request->input('key');

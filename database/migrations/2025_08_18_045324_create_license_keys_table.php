@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('license_keys', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('key')->unique();
-            $table->tinyInteger('status')->default(1)->comment('1:active, 2:revoked, 3:expired');
+            $table->tinyInteger('status')->default(1)->comment('1: active, 2: reissued, 3: expired');
             $table->integer('activation_limit')->default(1);
             $table->integer('activations')->default(0);
             $table->timestamp('expires_at')->nullable();

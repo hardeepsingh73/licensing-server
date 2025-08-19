@@ -138,7 +138,7 @@
 
                 <!-- Footer -->
                 <div class="card-footer bg-white text-end py-4">
-                    <a href="{{ route('api-logs.index') }}" class="btn btn-secondary btn-sm">
+                    <a href="{{ route('api-logs.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i> Back to Logs
                     </a>
                 </div>

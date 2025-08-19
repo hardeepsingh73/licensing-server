@@ -49,6 +49,25 @@
                 @if (isset($license))
                     @method('PUT')
                 @endif
+                <!-- Assign User -->
+                <div class="form-group row mb-4">
+                    <label for="user_id" class="col-sm-3 col-form-label">Assign User</label>
+                    <div class="col-sm-9">
+                        <select name="user_id" id="user_id"
+                            class="form-select @error('user_id') is-invalid @enderror">
+                            <option value="">-- Unassigned --</option>
+                            @foreach ($users as $user)
+                                <option value="{{ $user->id }}"
+                                    {{ old('user_id', $license->user_id ?? '') == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} ({{ $user->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('user_id')
+                            <x-error-msg>{{ $message }}</x-error-msg>
+                        @enderror
+                    </div>
+                </div>
 
                 <!-- License Key -->
                 <div class="form-group row mb-4">
@@ -80,6 +99,9 @@
                     <div class="col-sm-9">
                         <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                             @foreach (consthelper('LicenseKey::$statuses') as $id => $status)
+                                @if ($id === consthelper('LicenseKey::STATUS_REISSUE') && !isset($license))
+                                    @continue
+                                @endif
                                 <option value="{{ $id }}"
                                     {{ old('status', $license->status ?? '') == $id ? 'selected' : '' }}>
                                     {{ $status }}

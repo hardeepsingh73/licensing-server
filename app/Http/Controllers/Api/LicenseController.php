@@ -20,9 +20,10 @@ class LicenseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
+            // You can enable / adjust as needed if API endpoints are protected by permissions
             // new Middleware('permission:validate key', only: ['validateKey']),
             new Middleware('permission:activate key', only: ['activateKey']),
-            new Middleware('permission:revoke key', only: ['revokeKey']),
+            new Middleware('permission:reissue key', only: ['revokeKey']),
             // new Middleware('permission:list devices', only: ['listDevices']),
         ];
     }
@@ -36,7 +37,7 @@ class LicenseController extends Controller implements HasMiddleware
     public function validateKey(Request $request)
     {
         $key = $request->input('key');
-        $license = LicenseKey::where('key', $key)->first();
+        $license = LicenseKey::with('user')->where('key', $key)->first();
 
         if (!$license || $license->status != LicenseKey::STATUS_ACTIVE) {
             return response()->json(['valid' => false, 'message' => 'Invalid or inactive key'], 403);
@@ -46,7 +47,21 @@ class LicenseController extends Controller implements HasMiddleware
             return response()->json(['valid' => false, 'message' => 'Key expired'], 403);
         }
 
-        return response()->json(['valid' => true]);
+        return response()->json([
+            'valid' => true,
+            'license' => [
+                'key' => $license->key,
+                'status' => $license->status_label,
+                'expires_at' => $license->expires_at,
+                'activation_limit' => $license->activation_limit,
+                'activations' => $license->activations,
+                'user' => $license->user ? [
+                    'id' => $license->user->id,
+                    'name' => $license->user->name,
+                    'email' => $license->user->email
+                ] : null,
+            ]
+        ]);
     }
 
     /**
@@ -57,12 +72,15 @@ class LicenseController extends Controller implements HasMiddleware
      */
     public function activateKey(Request $request)
     {
-        $key = $request->input('key');
-        $deviceId = $request->input('device_id');
-        $license = LicenseKey::where('key', $key)->first();
+        $request->validate([
+            'key' => 'required|string',
+            'device_id' => 'required|string',
+        ]);
+
+        $license = LicenseKey::where('key', $request->input('key'))->first();
 
         if (!$license || $license->status != LicenseKey::STATUS_ACTIVE) {
-            return response()->json(['activated' => false, 'message' => 'Invalid key'], 403);
+            return response()->json(['activated' => false, 'message' => 'Invalid or inactive key'], 403);
         }
         if ($license->expires_at && Carbon::now()->gt($license->expires_at)) {
             return response()->json(['activated' => false, 'message' => 'License expired'], 403);
@@ -70,17 +88,17 @@ class LicenseController extends Controller implements HasMiddleware
 
         $deviceCount = LicenseActivation::where('license_key_id', $license->id)->count();
         if ($deviceCount >= $license->activation_limit) {
-            return response()->json(['activated' => false, 'message' => 'Device limit reached'], 403);
+            return response()->json(['activated' => false, 'message' => 'Device activation limit reached'], 403);
         }
 
         $existing = LicenseActivation::where('license_key_id', $license->id)
-            ->where('device_id', $deviceId)
+            ->where('device_id', $request->input('device_id'))
             ->first();
 
         if (!$existing) {
             LicenseActivation::create([
                 'license_key_id' => $license->id,
-                'device_id' => $deviceId,
+                'device_id' => $request->input('device_id'),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -91,7 +109,7 @@ class LicenseController extends Controller implements HasMiddleware
     }
 
     /**
-     * Revoke a license key: changes status to revoked and clears activations.
+     * Revoke a license key: changes status to reissued and clears activations.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -102,15 +120,15 @@ class LicenseController extends Controller implements HasMiddleware
         $license = LicenseKey::where('key', $key)->first();
 
         if (!$license) {
-            return response()->json(['revoked' => false, 'message' => 'License key not found'], 404);
+            return response()->json(['reissued' => false, 'message' => 'License key not found'], 404);
         }
 
-        $license->status = LicenseKey::STATUS_REVOKED;
+        $license->status = LicenseKey::STATUS_REISSUE;
         $license->save();
 
         $license->activations()->delete();
 
-        return response()->json(['revoked' => true, 'message' => 'License revoked and activations cleared']);
+        return response()->json(['reissued' => true, 'message' => 'License reissued and activations cleared']);
     }
 
     /**

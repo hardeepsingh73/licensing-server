@@ -29,21 +29,14 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">License Key: <strong>{{ $license->key }}</strong></h5>
+
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <div><strong>Status:</strong>
-                        @if ($license->status == consthelper('LicenseKey::STATUS_ACTIVE'))
-                            <span
-                                class="badge bg-success">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                        @elseif($license->status == consthelper('LicenseKey::STATUS_REVOKED'))
-                            <span
-                                class="badge bg-danger">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                        @elseif($license->status == consthelper('LicenseKey::STATUS_EXPIRED'))
-                            <span
-                                class="badge bg-warning text-dark">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                        @else
-                            <span class="badge bg-secondary">Unknown</span>
-                        @endif
+                    <div>
+                        <strong>Status:</strong>
+                        <span class="badge {{ $license->status_badge_class }}">
+                            {{ $license->status_label }}
+                        </span>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -53,6 +46,22 @@
                     <div><strong>Activations Used:</strong> {{ $license->activations }}</div>
                 </div>
             </div>
+
+            {{-- Assigned User --}}
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div>
+                        <strong>Assigned User:</strong>
+                        @if ($license->user)
+                            <span class="fw-semibold">{{ $license->user->name }}</span><br>
+                            <small class="text-muted">{{ $license->user->email }}</small>
+                        @else
+                            <span class="text-muted">Unassigned</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-4">
                     <div><strong>Expiry Date:</strong>
@@ -70,23 +79,24 @@
                     <div><strong>Last Updated:</strong> {{ $license->updated_at->format('Y-m-d H:i') }}</div>
                 </div>
             </div>
+
             @can('edit licenses')
                 <a href="{{ route('licenses.edit', $license) }}" class="btn btn-primary">
                     <i class="bi bi-pencil me-1"></i> Edit License
                 </a>
             @endcan
+
             @can('delete licenses')
-                @if ($license->status != consthelper('LicenseKey::STATUS_REVOKED'))
-                    <form action="{{ route('licenses.revoke', $license) }}" method="POST" id="revoke-form"
+                @if ($license->status != \App\Models\LicenseKey::STATUS_REISSUE)
+                    <form action="{{ route('licenses.reissue', $license) }}" method="POST" id="reissue-form"
                         class="d-inline">
                         @csrf
-                        <button type="button" class="btn btn-danger" id="revoke-btn">
-                            <i class="bi bi-slash-circle me-1"></i> Revoke License
+                        <button type="button" class="btn btn-danger" id="reissue-btn">
+                            <i class="bi bi-slash-circle me-1"></i> Reissue License
                         </button>
                     </form>
                 @endif
             @endcan
-
         </div>
     </div>
 
@@ -117,7 +127,8 @@
                                     <td class="text-break">{{ $device->device_id }}</td>
                                     <td>{{ $device->ip_address ?? '-' }}</td>
                                     <td class="text-truncate" style="max-width: 250px;">
-                                        {{ $device->user_agent ?? '-' }}</td>
+                                        {{ $device->user_agent ?? '-' }}
+                                    </td>
                                     <td>{{ $device->created_at->format('Y-m-d H:i') }}</td>
                                 </tr>
                             @endforeach
@@ -133,26 +144,25 @@
             @endif
         </div>
     </div>
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-
                 $(document).ready(function() {
-                    $('#revoke-btn').on('click', function(e) {
+                    $('#reissue-btn').on('click', function(e) {
                         e.preventDefault();
-
                         Swal.fire({
                             title: 'Are you sure?',
-                            text: "This will revoke the license and remove all activations!",
+                            text: "This will reissue the license and remove all activations!",
                             icon: 'warning',
                             showCancelButton: true,
-                            confirmButtonText: 'Yes, revoke it!',
+                            confirmButtonText: 'Yes, reissue it!',
                             cancelButtonText: 'Cancel',
                             reverseButtons: true,
                             focusCancel: true
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                $('#revoke-form').submit();
+                                $('#reissue-form').submit();
                             }
                         });
                     });
@@ -160,5 +170,4 @@
             });
         </script>
     @endpush
-
 </x-app-layout>
