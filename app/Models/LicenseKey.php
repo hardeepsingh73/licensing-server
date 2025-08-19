@@ -20,10 +20,14 @@ class LicenseKey extends Model
      */
     public static $statuses = [
         self::STATUS_ACTIVE => 'Active',
-        self::STATUS_REVOKED => 'Revoked',
+        // self::STATUS_REVOKED => 'Revoked',
         self::STATUS_EXPIRED => 'Expired',
     ];
     protected $fillable = ['key', 'status', 'activation_limit', 'activations', 'expires_at'];
+
+    protected $casts = [
+        'expires_at' => 'date'
+    ];
 
     public function activations()
     {
