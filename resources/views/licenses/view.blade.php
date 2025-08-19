@@ -32,13 +32,13 @@
             <div class="row mb-3">
                 <div class="col-md-4">
                     <div><strong>Status:</strong>
-                        @if ($license->status === consthelper('LicenseKey::STATUS_ACTIVE'))
+                        @if ($license->status == consthelper('LicenseKey::STATUS_ACTIVE'))
                             <span
                                 class="badge bg-success">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                        @elseif($license->status === consthelper('LicenseKey::STATUS_REVOKED'))
+                        @elseif($license->status == consthelper('LicenseKey::STATUS_REVOKED'))
                             <span
                                 class="badge bg-danger">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
-                        @elseif($license->status === consthelper('LicenseKey::STATUS_EXPIRED'))
+                        @elseif($license->status == consthelper('LicenseKey::STATUS_EXPIRED'))
                             <span
                                 class="badge bg-warning text-dark">{{ consthelper('LicenseKey::$statuses')[$license->status] }}</span>
                         @else
