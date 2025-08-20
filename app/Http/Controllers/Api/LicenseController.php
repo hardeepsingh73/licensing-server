@@ -90,10 +90,8 @@ class LicenseController extends Controller implements HasMiddleware
 
         if ($existing) {
             if ($existing->trashed()) {
-                // Device activation was soft deleted, restore it
                 $existing->restore();
 
-                // Optionally increment activations if you track count elsewhere
                 $license->increment('activations');
 
                 return response()->json([
@@ -102,7 +100,6 @@ class LicenseController extends Controller implements HasMiddleware
                 ]);
             }
 
-            // If not trashed, device is already activated (active)
             return response()->json([
                 'success' => false,
                 'message' => 'This device is already activated'
