@@ -59,7 +59,6 @@ class LicenseKey extends Model
      */
     public function getIsActiveAttribute()
     {
-        var_dump( $this->status === self::STATUS_ACTIVE);die;
         return $this->status === self::STATUS_ACTIVE;
     }
 

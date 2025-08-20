@@ -206,7 +206,7 @@ class LicenseController extends Controller implements HasMiddleware
             ];
         }
 
-        if ($license->isActive) {
+        if (!$license->isActive) {
             return [
                 'success' => false,
                 'message' => 'License is inactive',
