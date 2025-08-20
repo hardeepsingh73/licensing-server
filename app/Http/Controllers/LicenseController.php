@@ -231,10 +231,7 @@ class LicenseController extends Controller implements HasMiddleware
         }
 
         // Check if device already activated or soft deleted
-        $existing = LicenseActivation::withTrashed()
-            ->where('license_key_id', $license->id)
-            ->where('device_id', $request->input('device_id'))
-            ->first();
+        $existing = LicenseActivation::withTrashed()->where('license_key_id', $license->id)->where('device_id', $request->input('device_id'))->first();
 
         if ($existing) {
             if ($existing->trashed()) {
