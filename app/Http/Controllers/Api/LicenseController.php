@@ -73,18 +73,6 @@ class LicenseController extends Controller implements HasMiddleware
 
         $license = $license['data'];
 
-        // Check if device already activated
-        $existing = LicenseActivation::where('license_key_id', $license->id)
-            ->where('device_id', $request->input('device_id'))
-            ->first();
-
-        if ($existing) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This device is already activated'
-            ], 409);
-        }
-
         // Check device limit
         $deviceCount = LicenseActivation::where('license_key_id', $license->id)->count();
         if ($deviceCount >= $license->activation_limit) {
@@ -92,6 +80,33 @@ class LicenseController extends Controller implements HasMiddleware
                 'success' => false,
                 'message' => 'Device activation limit reached'
             ], 403);
+        }
+
+        // Check if device already activated or soft deleted
+        $existing = LicenseActivation::withTrashed()
+            ->where('license_key_id', $license->id)
+            ->where('device_id', $request->input('device_id'))
+            ->first();
+
+        if ($existing) {
+            if ($existing->trashed()) {
+                // Device activation was soft deleted, restore it
+                $existing->restore();
+
+                // Optionally increment activations if you track count elsewhere
+                $license->increment('activations');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Device re-activated successfully'
+                ]);
+            }
+
+            // If not trashed, device is already activated (active)
+            return response()->json([
+                'success' => false,
+                'message' => 'This device is already activated'
+            ], 409);
         }
 
         LicenseActivation::create([

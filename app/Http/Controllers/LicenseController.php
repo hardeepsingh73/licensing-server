@@ -230,10 +230,23 @@ class LicenseController extends Controller implements HasMiddleware
             return redirect()->back()->withErrors(['error' => 'Device activation limit reached']);
         }
 
-        $existing = LicenseActivation::where('license_key_id', $license->id)
+        // Check if device already activated or soft deleted
+        $existing = LicenseActivation::withTrashed()
+            ->where('license_key_id', $license->id)
             ->where('device_id', $request->input('device_id'))
             ->first();
+
         if ($existing) {
+            if ($existing->trashed()) {
+                // Device activation was soft deleted, restore it
+                $existing->restore();
+
+                // Optionally increment activations if you track count elsewhere
+                $license->increment('activations');
+                return redirect()->back()->with('success', 'Device re-activated successfully');
+            }
+
+            // If not trashed, device is already activated (active)
             return redirect()->back()->withErrors(['error' => 'This Device is already activated']);
         } else {
             LicenseActivation::create([
