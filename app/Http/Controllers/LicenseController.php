@@ -266,7 +266,7 @@ class LicenseController extends Controller implements HasMiddleware
             $license->status = LicenseKey::STATUS_REISSUE;
             $license->save();
             $license->activations()->delete();
-
+            $license->update(['activations' => 0]);
             DB::commit();
 
             return redirect()->route('licenses.index')->with('success', 'License reissued and activations cleared.');

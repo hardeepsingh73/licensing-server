@@ -127,6 +127,7 @@ class LicenseController extends Controller implements HasMiddleware
         DB::transaction(function () use ($license) {
             $license->update(['status' => LicenseKey::STATUS_REISSUE]);
             $license->activations()->delete();
+            $license->update(['activations' => 0]);
         });
 
         return response()->json([
