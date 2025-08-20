@@ -155,7 +155,7 @@ class LicenseController extends Controller implements HasMiddleware
             ], 404);
         }
 
-        $devices = $license->devices->select('device_id', 'ip_address', 'user_agent', 'created_at')->get();
+        $devices = $license->devices()->select('device_id', 'ip_address', 'user_agent', 'created_at')->get();
 
         return response()->json([
             'success' => true,

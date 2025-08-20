@@ -124,7 +124,7 @@ class LicenseController extends Controller implements HasMiddleware
      */
     public function show(LicenseKey $license)
     {
-        $devices = $license->devices->paginate(10);
+        $devices = $license->devices()->paginate(10);
         return view('licenses.view', compact('license', 'devices'));
     }
 
