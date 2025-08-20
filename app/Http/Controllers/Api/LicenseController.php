@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LicenseKeyRequest;
 use App\Models\LicenseActivation;
 use App\Models\LicenseKey;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 
 class LicenseController extends Controller implements HasMiddleware
 {
@@ -20,7 +22,7 @@ class LicenseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            // You can enable / adjust as needed if API endpoints are protected by permissions
+            // Add permissions here if needed
             // new Middleware('permission:validate key', only: ['validateKey']),
             new Middleware('permission:activate key', only: ['activateKey']),
             new Middleware('permission:reissue key', only: ['reissueKey']),
@@ -30,45 +32,31 @@ class LicenseController extends Controller implements HasMiddleware
 
     /**
      * Validate a license key's status and expiry.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function validateKey(Request $request)
     {
-        $key = $request->input('key');
-        $license = LicenseKey::with('user')->where('key', $key)->first();
+        $license = $this->getValidLicense($request->input('key'));
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
-            return response()->json(['valid' => false, 'message' => 'Invalid or inactive key'], 403);
-        }
-
-        if ($license->expires_at && Carbon::now()->gt($license->expires_at)) {
-            return response()->json(['valid' => false, 'message' => 'Key expired'], 403);
+        if (!$license['success']) {
+            return response()->json($license, $license['status_code']);
         }
 
         return response()->json([
-            'valid' => true,
-            'license' => [
-                'key' => $license->key,
-                'status' => $license->status_label,
-                'expires_at' => $license->expires_at,
-                'activation_limit' => $license->activation_limit,
-                'activations' => $license->activations,
-                'user' => $license->user ? [
-                    'id' => $license->user->id,
-                    'name' => $license->user->name,
-                    'email' => $license->user->email
-                ] : null,
+            'success' => true,
+            'message' => 'License is valid',
+            'data' => [
+                'key' => $license['data']->key,
+                'status' => $license['data']->status_label,
+                'expires_at' => $license['data']->expires_at,
+                'activation_limit' => $license['data']->activation_limit,
+                'activations' => $license['data']->activations,
+                'user' => optional($license['data']->user)->only(['id', 'name', 'email']),
             ]
         ]);
     }
 
     /**
      * Activate a license key for a device, enforcing device limits.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function activateKey(Request $request)
     {
@@ -77,44 +65,52 @@ class LicenseController extends Controller implements HasMiddleware
             'device_id' => 'required|string',
         ]);
 
-        $license = LicenseKey::where('key', $request->input('key'))->first();
+        $license = $this->getValidLicense($request->input('key'));
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
-            return response()->json(['activated' => false, 'message' => 'Invalid or inactive key'], 403);
-        }
-        if ($license->expires_at && Carbon::now()->gt($license->expires_at)) {
-            return response()->json(['activated' => false, 'message' => 'License expired'], 403);
+        if (!$license['success']) {
+            return response()->json($license, $license['status_code']);
         }
 
-        $deviceCount = LicenseActivation::where('license_key_id', $license->id)->count();
-        if ($deviceCount >= $license->activation_limit) {
-            return response()->json(['activated' => false, 'message' => 'Device activation limit reached'], 403);
-        }
+        $license = $license['data'];
 
+        // Check if device already activated
         $existing = LicenseActivation::where('license_key_id', $license->id)
             ->where('device_id', $request->input('device_id'))
             ->first();
 
         if ($existing) {
-            return response()->json(['activated' => false, 'message' => 'This Device is already activated'], 403);
-        } else {
-            LicenseActivation::create([
-                'license_key_id' => $license->id,
-                'device_id' => $request->input('device_id'),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
-            $license->increment('activations');
+            return response()->json([
+                'success' => false,
+                'message' => 'This device is already activated'
+            ], 409);
         }
 
-        return response()->json(['activated' => true, 'message' => 'Activation successful']);
+        // Check device limit
+        $deviceCount = LicenseActivation::where('license_key_id', $license->id)->count();
+        if ($deviceCount >= $license->activation_limit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device activation limit reached'
+            ], 403);
+        }
+
+        LicenseActivation::create([
+            'license_key_id' => $license->id,
+            'device_id' => $request->input('device_id'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        $license->increment('activations');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Activation successful'
+        ]);
     }
 
     /**
-     * Revoke a license key: changes status to reissued and clears activations.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Revoke & reissue a license key: changes status to reissued and clears activations.
      */
     public function reissueKey(Request $request)
     {
@@ -122,22 +118,25 @@ class LicenseController extends Controller implements HasMiddleware
         $license = LicenseKey::where('key', $key)->first();
 
         if (!$license) {
-            return response()->json(['reissued' => false, 'message' => 'License key not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'License key not found'
+            ], 404);
         }
 
-        $license->status = LicenseKey::STATUS_REISSUE;
-        $license->save();
+        DB::transaction(function () use ($license) {
+            $license->update(['status' => LicenseKey::STATUS_REISSUE]);
+            $license->activations()->delete();
+        });
 
-        $license->activations()->delete();
-
-        return response()->json(['reissued' => true, 'message' => 'License reissued and activations cleared']);
+        return response()->json([
+            'success' => true,
+            'message' => 'License reissued and activations cleared'
+        ]);
     }
 
     /**
      * List devices activated under a license key.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function listDevices(Request $request)
     {
@@ -145,13 +144,87 @@ class LicenseController extends Controller implements HasMiddleware
         $license = LicenseKey::where('key', $key)->first();
 
         if (!$license) {
-            return response()->json(['devices' => [], 'message' => 'License key not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'License key not found',
+                'data' => []
+            ], 404);
         }
 
         $devices = $license->activations()
             ->select('device_id', 'ip_address', 'user_agent', 'created_at')
             ->get();
 
-        return response()->json(['devices' => $devices]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Devices fetched successfully',
+            'data' => $devices
+        ]);
+    }
+
+    /**
+     * Create a new license key.
+     */
+    public function createKey(LicenseKeyRequest $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $licenseKey = LicenseKey::create($request->validated());
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'License key created successfully',
+                'data' => $licenseKey
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create license key',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper: Validate license and return standardized response array.
+     */
+    private function getValidLicense(string $key): array
+    {
+        $license = LicenseKey::with('user')->where('key', $key)->first();
+
+        if (!$license) {
+            return [
+                'success' => false,
+                'message' => 'License key not found',
+                'status_code' => 404
+            ];
+        }
+
+        if ($license->status !== LicenseKey::STATUS_ACTIVE) {
+            return [
+                'success' => false,
+                'message' => 'License is inactive',
+                'status_code' => 403
+            ];
+        }
+
+        if ($license->expires_at && Carbon::now()->gt($license->expires_at)) {
+            return [
+                'success' => false,
+                'message' => 'License expired',
+                'status_code' => 403
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Valid license',
+            'status_code' => 200,
+            'data' => $license
+        ];
     }
 }

@@ -10,8 +10,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/validate-key', [LicenseController::class, 'validateKey']);
-    Route::post('/activate-key', [LicenseController::class, 'activateKey']);
-    Route::post('/reissue-key', [LicenseController::class, 'reissueKey']);
-    Route::post('/list-devices', [LicenseController::class, 'listDevices']);
+    Route::prefix('license')->name('license.')->controller(LicenseController::class)->group(function () {
+        Route::post('/validate', 'validateKey')->name('validate');
+        Route::post('/activate', 'activateKey')->name('activate');
+        Route::post('/reissue', 'reissueKey')->name('reissue');
+        Route::post('/devices', 'listDevices')->name('devices');
+        Route::post('/create', 'createKey')->name('create');
+    });
 });
