@@ -52,7 +52,7 @@ class LicenseController extends Controller implements HasMiddleware
                 'activations' => $license['data']->activations,
                 'user' => optional($license['data']->user)->only(['id', 'name', 'email']),
             ]
-        ]);
+        ], 200);
     }
 
     /**
@@ -106,7 +106,7 @@ class LicenseController extends Controller implements HasMiddleware
         return response()->json([
             'success' => true,
             'message' => 'Activation successful'
-        ]);
+        ], 200);
     }
 
     /**
@@ -178,7 +178,7 @@ class LicenseController extends Controller implements HasMiddleware
                 'success' => true,
                 'message' => 'License key created successfully',
                 'data' => $licenseKey
-            ], 201);
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
 

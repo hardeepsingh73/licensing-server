@@ -22,7 +22,7 @@ class LicenseKeyRequest extends FormRequest
         $licenseKeyId = $this->route('license') ? $this->route('license')->id : null;
 
         return [
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'key' => [
                 'required',
                 'string',
