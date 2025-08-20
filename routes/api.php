@@ -12,6 +12,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate-key', [LicenseController::class, 'validateKey']);
     Route::post('/activate-key', [LicenseController::class, 'activateKey']);
-    Route::post('/reissue-key', [LicenseController::class, 'revokeKey']);
+    Route::post('/reissue-key', [LicenseController::class, 'reissueKey']);
     Route::post('/list-devices', [LicenseController::class, 'listDevices']);
 });

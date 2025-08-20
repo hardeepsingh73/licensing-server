@@ -102,7 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{license}/edit', [LicenseController::class, 'edit'])->name('edit');
         Route::put('/{license}', [LicenseController::class, 'update'])->name('update');
         Route::delete('/{license}', [LicenseController::class, 'destroy'])->name('destroy');
-        Route::post('/{license}/reissue', [LicenseController::class, 'revokeKey'])->name('reissue');
+        Route::post('/{license}/reissue', [LicenseController::class, 'reissueKey'])->name('reissue');
         Route::post('/check-key', [LicenseController::class, 'checkKeyUniqueness'])->name('checkKey');
     });
 });

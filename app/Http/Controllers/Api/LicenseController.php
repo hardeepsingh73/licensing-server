@@ -23,7 +23,7 @@ class LicenseController extends Controller implements HasMiddleware
             // You can enable / adjust as needed if API endpoints are protected by permissions
             // new Middleware('permission:validate key', only: ['validateKey']),
             new Middleware('permission:activate key', only: ['activateKey']),
-            new Middleware('permission:reissue key', only: ['revokeKey']),
+            new Middleware('permission:reissue key', only: ['reissueKey']),
             // new Middleware('permission:list devices', only: ['listDevices']),
         ];
     }
@@ -114,7 +114,7 @@ class LicenseController extends Controller implements HasMiddleware
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function revokeKey(Request $request)
+    public function reissueKey(Request $request)
     {
         $key = $request->input('key');
         $license = LicenseKey::where('key', $key)->first();

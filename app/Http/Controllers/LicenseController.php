@@ -51,7 +51,7 @@ class LicenseController extends Controller implements HasMiddleware
             new Middleware('permission:view license', only: ['index', 'show', 'listDevices']),
             new Middleware('permission:create license', only: ['create', 'store']),
             new Middleware('permission:edit license', only: ['edit', 'update', 'activateKey']),
-            new Middleware('permission:delete license', only: ['destroy', 'revokeKey']),
+            new Middleware('permission:delete license', only: ['destroy', 'reissueKey']),
         ];
     }
 
@@ -255,7 +255,7 @@ class LicenseController extends Controller implements HasMiddleware
      * @param LicenseKey $license License to reissue.
      * @return RedirectResponse Redirect with status message.
      */
-    public function revokeKey(LicenseKey $license): RedirectResponse
+    public function reissueKey(LicenseKey $license): RedirectResponse
     {
         // $this->authorize('delete', $license);
 
