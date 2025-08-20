@@ -57,10 +57,11 @@ class LicenseKey extends Model
     /**
      * Check if LicenseKey is active
      */
-    public function isActive()
+    public function getIsActiveAttribute()
     {
         return $this->status == self::STATUS_ACTIVE;
     }
+
     public function user()
     {
         return $this->belongsTo(User::class);

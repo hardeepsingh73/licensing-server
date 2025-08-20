@@ -216,7 +216,7 @@ class LicenseController extends Controller implements HasMiddleware
 
         $license = LicenseKey::where('key', $request->input('key'))->first();
 
-        if (!$license || $license->status !== LicenseKey::STATUS_ACTIVE) {
+        if (!$license || $license->isActive) {
             return redirect()->back()->withErrors(['error' => 'Invalid or inactive license key']);
         }
 
@@ -264,9 +264,9 @@ class LicenseController extends Controller implements HasMiddleware
 
         try {
             $license->status = LicenseKey::STATUS_REISSUE;
+            $license->activations = 0;
             $license->save();
             $license->activations()->delete();
-            $license->update(['activations' => 0]);
             DB::commit();
 
             return redirect()->route('licenses.index')->with('success', 'License reissued and activations cleared.');

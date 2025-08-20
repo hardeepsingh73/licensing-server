@@ -125,9 +125,10 @@ class LicenseController extends Controller implements HasMiddleware
         }
 
         DB::transaction(function () use ($license) {
-            $license->update(['status' => LicenseKey::STATUS_REISSUE]);
+            $license->status = LicenseKey::STATUS_REISSUE;
+            $license->activations = 0;
+            $license->save();
             $license->activations()->delete();
-            $license->update(['activations' => 0]);
         });
 
         return response()->json([
@@ -205,7 +206,7 @@ class LicenseController extends Controller implements HasMiddleware
             ];
         }
 
-        if ($license->status !== LicenseKey::STATUS_ACTIVE) {
+        if ($license->isActive) {
             return [
                 'success' => false,
                 'message' => 'License is inactive',
