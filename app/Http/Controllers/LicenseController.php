@@ -124,7 +124,7 @@ class LicenseController extends Controller implements HasMiddleware
      */
     public function show(LicenseKey $license)
     {
-        $devices = $license->activations()->paginate(10);
+        $devices = $license->devices->paginate(10);
         return view('licenses.view', compact('license', 'devices'));
     }
 
@@ -266,7 +266,9 @@ class LicenseController extends Controller implements HasMiddleware
             $license->status = LicenseKey::STATUS_REISSUE;
             $license->activations = 0;
             $license->save();
-            $license->activations()->delete();
+            $license->devices->each(function ($activation) {
+                $activation->delete();
+            });
             DB::commit();
 
             return redirect()->route('licenses.index')->with('success', 'License reissued and activations cleared.');

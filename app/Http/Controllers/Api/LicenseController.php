@@ -128,7 +128,9 @@ class LicenseController extends Controller implements HasMiddleware
             $license->status = LicenseKey::STATUS_REISSUE;
             $license->activations = 0;
             $license->save();
-            $license->activations()->delete();
+            $license->devices->each(function ($activation) {
+                $activation->delete();
+            });
         });
 
         return response()->json([
@@ -153,9 +155,7 @@ class LicenseController extends Controller implements HasMiddleware
             ], 404);
         }
 
-        $devices = $license->activations()
-            ->select('device_id', 'ip_address', 'user_agent', 'created_at')
-            ->get();
+        $devices = $license->devices->select('device_id', 'ip_address', 'user_agent', 'created_at')->get();
 
         return response()->json([
             'success' => true,

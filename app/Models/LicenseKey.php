@@ -31,7 +31,7 @@ class LicenseKey extends Model
         'status' => 'integer',
     ];
 
-    public function activations()
+    public function devices()
     {
         return $this->hasMany(LicenseActivation::class);
     }
