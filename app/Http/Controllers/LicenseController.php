@@ -233,8 +233,9 @@ class LicenseController extends Controller implements HasMiddleware
         $existing = LicenseActivation::where('license_key_id', $license->id)
             ->where('device_id', $request->input('device_id'))
             ->first();
-
-        if (!$existing) {
+        if ($existing) {
+            return redirect()->back()->withErrors(['error' => 'This Device is already activated']);
+        } else {
             LicenseActivation::create([
                 'license_key_id' => $license->id,
                 'device_id' => $request->input('device_id'),
@@ -274,23 +275,6 @@ class LicenseController extends Controller implements HasMiddleware
 
             return redirect()->route('licenses.index')->withErrors(['error' => $e->getMessage()]);
         }
-    }
-
-    /**
-     * List all activated devices registered under a specific license key.
-     *
-     * Requires authorization to view license.
-     *
-     * @param LicenseKey $license License whose devices to list.
-     * @return \Illuminate\View\View Render devices listing page.
-     */
-    public function listDevices(LicenseKey $license)
-    {
-        // $this->authorize('view', $license);
-
-        $devices = $license->activations()->paginate(10);
-
-        return view('licenses.devices', compact('license', 'devices'));
     }
 
     /**

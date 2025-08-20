@@ -1,51 +1,41 @@
-curl -X GET http://127.0.0.1:8000/api/users \
-  -H "Accept: application/json" \
-  -H "Authorization: Bearer 6|oZLboRfWTwhKKOy9zn5lwa7OhmOV0mK5KWsVKvUid0968126"
+    login
 
+curl --location 'https://liquidclaybar.com/api/login' \
+--header 'Accept: application/json' \
+--header 'Content-Type: application/json' \
+--data-raw '{"email": "superadmin@licensing.com", "password": "password123!"}'
 
-  curl -X POST http://127.0.0.1:8000/api/login \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "password"}'
+    users
 
-sitemap code
-  
-    public function index()
-    {
-        $urls = [];
+curl --location 'https://liquidclaybar.com/api/users' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer 1|rjPbJjiDLcvFzCYwbt3RH3milUI7yf9JUhvE5k5014d02d69'
 
-        // Get all routes
-        $routes = collect(Route::getRoutes());
+    validate-key
 
-        foreach ($routes as $route) {
-            $uri = $route->uri();
+curl --location 'https://liquidclaybar.com/api/validate-key' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer 1|rjPbJjiDLcvFzCYwbt3RH3milUI7yf9JUhvE5k5014d02d69' \
+--form 'key="IPTV-T6O0-CVOY-RDOK"'
 
-            // Exclude routes with parameters (optional: or handle dynamic generation)
-            if (strpos($uri, '{') === false) {
-                $urls[] = [
-                    'loc' => URL::to($uri),
-                    'lastmod' => Carbon::now()->toAtomString(), // Or customize per route
-                    'changefreq' => 'weekly',
-                    'priority' => '0.7',
-                ];
-            }
-        }
+    reissueKey
 
-        $xml = $this->generateSitemap($urls);
+curl --location 'https://liquidclaybar.com/api/reissue-key' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer 1|rjPbJjiDLcvFzCYwbt3RH3milUI7yf9JUhvE5k5014d02d69' \
+--form 'key="IPTV-T6O0-CVOY-RDOK"'
 
-        return response($xml, 200)->header('Content-Type', 'application/xml');
-    }
+    list-devices
 
-    private function generateSitemap(array $urls)
-    {
-        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><urlset/>');
-        $xml->addAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
-        foreach ($urls as $url) {
-            $urlTag = $xml->addChild('url');
-            $urlTag->addChild('loc', $url['loc']);
-            $urlTag->addChild('lastmod', $url['lastmod']);
-            $urlTag->addChild('changefreq', $url['changefreq']);
-            $urlTag->addChild('priority', $url['priority']);
-        }
-        return $xml->asXML();
-    }
+curl --location 'https://liquidclaybar.com/api/list-devices' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer 1|rjPbJjiDLcvFzCYwbt3RH3milUI7yf9JUhvE5k5014d02d69' \
+--form 'key="IPTV-T6O0-CVOY-RDOK"'
+
+    activate-key
+
+curl --location 'https://liquidclaybar.com/api/activate-key' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer 1|rjPbJjiDLcvFzCYwbt3RH3milUI7yf9JUhvE5k5014d02d69' \
+--form 'key="IPTV-T6O0-CVOY-RDOK"' \
+--form 'device_id="123"'

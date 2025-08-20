@@ -95,7 +95,9 @@ class LicenseController extends Controller implements HasMiddleware
             ->where('device_id', $request->input('device_id'))
             ->first();
 
-        if (!$existing) {
+        if ($existing) {
+            return response()->json(['activated' => false, 'message' => 'This Device is already activated'], 403);
+        } else {
             LicenseActivation::create([
                 'license_key_id' => $license->id,
                 'device_id' => $request->input('device_id'),
