@@ -129,20 +129,6 @@ class UserController extends Controller implements HasMiddleware
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Remove the specified user from the database.
      *
