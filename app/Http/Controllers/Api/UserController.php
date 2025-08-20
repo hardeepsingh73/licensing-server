@@ -39,9 +39,7 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(): JsonResponse
     {
-        $users = User::with('roles')
-            ->latest()
-            ->paginate(10);
+        $users = User::with('roles')->latest()->paginate(10);
 
         return $this->successResponse($users);
     }

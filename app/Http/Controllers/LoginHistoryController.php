@@ -104,8 +104,6 @@ class LoginHistoryController extends Controller implements HasMiddleware
     {
         LoginHistory::truncate();
 
-        return redirect()
-            ->route('login-history.index')
-            ->with('success', 'All login history logs have been cleared.');
+        return redirect()->route('login-history.index')->with('success', 'All login history logs have been cleared.');
     }
 }

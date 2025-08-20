@@ -83,8 +83,7 @@ class ActivityLog extends Model
      */
     public function scopeForSubject($query, $subject)
     {
-        return $query->where('subject_id', $subject->id)
-            ->where('subject_type', get_class($subject));
+        return $query->where('subject_id', $subject->id)->where('subject_type', get_class($subject));
     }
 
     /**
@@ -96,7 +95,6 @@ class ActivityLog extends Model
      */
     public function scopeForCauser($query, $causer)
     {
-        return $query->where('causer_id', $causer->id)
-            ->where('causer_type', get_class($causer));
+        return $query->where('causer_id', $causer->id)->where('causer_type', get_class($causer));
     }
 }

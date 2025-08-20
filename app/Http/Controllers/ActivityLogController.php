@@ -86,12 +86,7 @@ class ActivityLogController extends Controller implements HasMiddleware
     public function export(Request $request): StreamedResponse
     {
         // Build the query with optional filters
-        $logs = ActivityLog::query()
-            ->when($request->filled('user'), fn($q) => $q->where('causer_id', $request->user))
-            ->when($request->filled('type'), fn($q) => $q->where('subject_type', $request->type))
-            ->when($request->filled('event'), fn($q) => $q->where('event', $request->event))
-            ->latest()
-            ->get();
+        $logs = ActivityLog::query()->when($request->filled('user'), fn($q) => $q->where('causer_id', $request->user))->when($request->filled('type'), fn($q) => $q->where('subject_type', $request->type))->when($request->filled('event'), fn($q) => $q->where('event', $request->event))->latest()->get();
 
         // Set CSV filename with timestamp
         $fileName = 'activity_logs_' . now()->format('Y-m-d_H-i-s') . '.csv';
@@ -157,11 +152,9 @@ class ActivityLogController extends Controller implements HasMiddleware
     {
         ActivityLog::truncate();
 
-        return redirect()
-            ->route('activity-logs.index')
-            ->with('success', 'All activity logs have been cleared.');
+        return redirect()->route('activity-logs.index')->with('success', 'All activity logs have been cleared.');
     }
-    
+
     public function restore($id)
     {
         $activityLog = ActivityLog::findOrFail($id);

@@ -96,8 +96,6 @@ class ApiLogController extends Controller implements HasMiddleware
     {
         ApiLog::truncate();
 
-        return redirect()
-            ->route('api-logs.index')
-            ->with('success', 'All api logs have been cleared.');
+        return redirect()->route('api-logs.index')->with('success', 'All api logs have been cleared.');
     }
 }

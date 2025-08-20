@@ -106,9 +106,7 @@ class SettingController extends Controller implements HasMiddleware
 
         Setting::create($validated);
 
-        return redirect()
-            ->route('settings.index')
-            ->with('success', 'Setting created successfully.');
+        return redirect()->route('settings.index')->with('success', 'Setting created successfully.');
     }
 
     /**
@@ -165,9 +163,7 @@ class SettingController extends Controller implements HasMiddleware
 
         $setting->update($validated);
 
-        return redirect()
-            ->route('settings.index')
-            ->with('success', 'Setting updated successfully.');
+        return redirect()->route('settings.index')->with('success', 'Setting updated successfully.');
     }
 
     /**
@@ -241,9 +237,7 @@ class SettingController extends Controller implements HasMiddleware
         $setting->delete();
 
         // Redirect back to settings index with success message
-        return redirect()
-            ->route('settings.index')
-            ->with('success', 'Setting deleted successfully.');
+        return redirect()->route('settings.index')->with('success', 'Setting deleted successfully.');
     }
 
     /**

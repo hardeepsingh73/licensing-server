@@ -84,8 +84,6 @@ class ErrorLogController extends Controller implements HasMiddleware
     {
         ErrorLog::truncate();
 
-        return redirect()
-            ->route('error-logs.index')
-            ->with('success', 'All error logs have been cleared.');
+        return redirect()->route('error-logs.index')->with('success', 'All error logs have been cleared.');
     }
 }

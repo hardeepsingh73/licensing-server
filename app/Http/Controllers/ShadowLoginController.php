@@ -30,8 +30,7 @@ class ShadowLoginController extends Controller
         Auth::login($user);
 
         // Redirect to dashboard as impersonated user
-        return redirect('/dashboard')
-            ->with('status', 'Logged in as user: ' . $user->name);
+        return redirect('/dashboard')->with('status', 'Logged in as user: ' . $user->name);
     }
 
     /**

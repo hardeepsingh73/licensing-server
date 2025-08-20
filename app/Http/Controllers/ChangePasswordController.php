@@ -57,8 +57,6 @@ class ChangePasswordController extends Controller
         ]);
 
         //  Step 4: Redirect to dashboard with success message
-        return redirect()
-            ->route('dashboard')
-            ->with('status', 'Password updated successfully!');
+        return redirect()->route('dashboard')->with('status', 'Password updated successfully!');
     }
 }

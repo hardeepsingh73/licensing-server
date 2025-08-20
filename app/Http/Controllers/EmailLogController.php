@@ -73,9 +73,7 @@ class EmailLogController extends Controller implements HasMiddleware
         EmailLog::truncate();
 
         // Redirect back to index with success message
-        return redirect()
-            ->route('email-logs.index')
-            ->with('success', 'All email logs have been cleared.');
+        return redirect()->route('email-logs.index')->with('success', 'All email logs have been cleared.');
     }
 
     /**

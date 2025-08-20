@@ -101,9 +101,7 @@ class UserController extends Controller implements HasMiddleware
         }
 
         // Fetch roles excluding the above
-        $roles = Role::whereNotIn('name', $excludedRoles)
-            ->orderBy('name', 'ASC')
-            ->get();
+        $roles = Role::whereNotIn('name', $excludedRoles)->orderBy('name', 'ASC')->get();
 
         return view('users.form', compact('roles'));
     }
@@ -166,9 +164,7 @@ class UserController extends Controller implements HasMiddleware
             $excludedRoles[] = Settings::get('role_super_admin', 'superadmin');
         }
 
-        $roles = Role::whereNotIn('name', $excludedRoles)
-            ->orderBy('name', 'ASC')
-            ->get();
+        $roles = Role::whereNotIn('name', $excludedRoles)->orderBy('name', 'ASC')->get();
 
         $currentRoleName = $user->getRoleNames()->first();
 

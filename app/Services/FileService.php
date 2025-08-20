@@ -146,8 +146,7 @@ class FileService
      */
     public function getModelFiles($model, ?int $typeId = null)
     {
-        $query = File::where('model_id', $model->id)
-            ->where('model_type', get_class($model));
+        $query = File::where('model_id', $model->id)->where('model_type', get_class($model));
 
         if ($typeId) {
             $query->where('type_id', $typeId);
