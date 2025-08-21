@@ -55,7 +55,7 @@ class LicenseController extends Controller implements HasMiddleware
                     return $device->only(['device_id', 'ip_address', 'user_agent', 'created_at']);
                 }),
             ]
-        ], 200);
+        ]);
     }
 
     /**
@@ -118,7 +118,7 @@ class LicenseController extends Controller implements HasMiddleware
         return response()->json([
             'success' => true,
             'message' => 'Activation successful'
-        ], 200);
+        ]);
     }
 
     /**
@@ -191,7 +191,7 @@ class LicenseController extends Controller implements HasMiddleware
                 'success' => true,
                 'message' => 'License key created successfully',
                 'data' => $licenseKey
-            ], 200);
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
 
