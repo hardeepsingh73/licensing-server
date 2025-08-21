@@ -51,6 +51,9 @@ class LicenseController extends Controller implements HasMiddleware
                 'activation_limit' => $license['data']->activation_limit,
                 'activations' => $license['data']->activations,
                 'user' => optional($license['data']->user)->only(['id', 'name', 'email']),
+                'devices' => optional($license['data']->devices)->map(function ($device) {
+                    return $device->only(['device_id', 'ip_address', 'user_agent', 'created_at']);
+                }),
             ]
         ], 200);
     }
@@ -205,7 +208,7 @@ class LicenseController extends Controller implements HasMiddleware
      */
     private function getValidLicense(string $key): array
     {
-        $license = LicenseKey::with('user')->where('key', $key)->first();
+        $license = LicenseKey::with(['user', 'devices'])->where('key', $key)->first();
 
         if (!$license) {
             return [
