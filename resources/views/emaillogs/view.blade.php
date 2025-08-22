@@ -51,7 +51,8 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <h6 class="text-muted small mb-1">Status</h6>
-                        <span class="badge bg-{{ $emailLog->status === consthelper('EmailLog::STATUS_SENT') ? 'success' : 'danger' }}">
+                        <span
+                            class="badge bg-{{ $emailLog->status === consthelper('EmailLog::STATUS_SENT') ? 'success' : 'danger' }}">
                             {{ ucfirst($emailLog->status) }}
                         </span>
                     </div>
@@ -68,7 +69,7 @@
 
             <div class="mb-3">
                 <h6 class="text-muted small mb-2">Email Content</h6>
-                <div class="border p-3 bg-light rounded" style="white-space: pre-wrap;">
+                <div class="border p-3 bg-light rounded">
                     {!! $emailLog->body !!}
                 </div>
             </div>

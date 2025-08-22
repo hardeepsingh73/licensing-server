@@ -171,17 +171,19 @@
     <!-- Password toggle and tooltips -->
     <x-slot name="script">
         <script>
-            $('#togglePassword').click(function() {
-                const $passwordInput = $('#password');
-                const $icon = $(this).find('i');
+            document.addEventListener('DOMContentLoaded', function() {
+                $('#togglePassword').click(function() {
+                    const $passwordInput = $('#password');
+                    const $icon = $(this).find('i');
 
-                if ($passwordInput.attr('type') === 'password') {
-                    $passwordInput.attr('type', 'text');
-                    $icon.removeClass('bi-eye').addClass('bi-eye-slash');
-                } else {
-                    $passwordInput.attr('type', 'password');
-                    $icon.removeClass('bi-eye-slash').addClass('bi-eye');
-                }
+                    if ($passwordInput.attr('type') === 'password') {
+                        $passwordInput.attr('type', 'text');
+                        $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                    } else {
+                        $passwordInput.attr('type', 'password');
+                        $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                    }
+                });
             });
         </script>
     </x-slot>

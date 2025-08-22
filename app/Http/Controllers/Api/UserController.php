@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRequest;
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -11,6 +12,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller implements HasMiddleware
@@ -65,6 +67,13 @@ class UserController extends Controller implements HasMiddleware
                 $this->assignUserRole($user, $request->validated('roles'));
             }
 
+            try {
+                Mail::to($user->email)->send(new WelcomeMail($user));
+            } catch (\Throwable $e) {
+                // Rollback or handle failure
+                DB::rollBack();
+                throw new \Exception("Welcome email error: " . $e->getMessage(), 0, $e);
+            }
             DB::commit();
 
             return $this->successResponse(

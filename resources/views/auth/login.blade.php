@@ -8,7 +8,7 @@
                         <div class="text-center mb-4">
                             <a href="{{ url('/') }}" class="text-decoration-none">
                                 <i class="bi bi-box-seam fs-1 text-primary"></i>
-                                <h2 class="h3 mt-2 fw-bold">{{ setting('site_name', 'Laravel') }}</h2>
+                                <h2 class="h3 mt-2 fw-bold">{{ setting('site_name', config('app.name')) }}</h2>
                             </a>
                             <p class="text-muted mb-4">{{ __('Sign in to your account') }}</p>
                         </div>

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <title>{{ setting('site_name', 'Laravel') }}</title>
+    <title>{{ setting('site_name', config('app.name')) }}</title>
 
     <!-- Your CSS and JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\RoleDataHelper;
 use App\Helpers\Settings;
 use App\Http\Requests\UserRequest;
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\SearchService;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller implements HasMiddleware
 {
@@ -136,6 +138,13 @@ class UserController extends Controller implements HasMiddleware
                 }
             }
 
+            try {
+                Mail::to($user->email)->send(new WelcomeMail($user));
+            } catch (\Throwable $e) {
+                // Rollback or handle failure
+                DB::rollBack();
+                throw new \Exception("Welcome email error: " . $e->getMessage(), 0, $e);
+            }
             DB::commit();
 
             return redirect()->route('users.index')->with('success', 'User created successfully.');

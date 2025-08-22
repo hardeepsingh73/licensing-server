@@ -11,7 +11,7 @@
                 <!-- Brand/logo -->
                 <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}" aria-label="Home">
                     <i class="bi bi-rocket-takeoff me-2"></i>
-                    <span class="fw-bold">{{ setting('site_name', 'Laravel') }}</span>
+                    <span class="fw-bold">{{ setting('site_name', config('app.name')) }}</span>
                 </a>
             </div>
             <!-- Main navbar toggler -->

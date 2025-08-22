@@ -16,8 +16,6 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ensure minimal roles exist before assigning
-        $this->ensureRolesExist();
 
         // ------- SuperAdmin Account -------
         $superadmin = User::firstOrCreate(
@@ -30,20 +28,7 @@ class UsersSeeder extends Seeder
         );
 
         $superadmin->syncRoles('superadmin');
+
         $this->command->info(' Default superadmin account seeded successfully.');
-    }
-
-    /**
-     * Ensure required roles exist before user creation.
-     *
-     * @return void
-     */
-    protected function ensureRolesExist(): void
-    {
-        $requiredRoles = ['admin', 'user'];
-
-        foreach ($requiredRoles as $role) {
-            Role::firstOrCreate(['name' => $role]);
-        }
     }
 }

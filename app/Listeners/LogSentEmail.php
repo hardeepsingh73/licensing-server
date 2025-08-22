@@ -99,6 +99,12 @@ class LogSentEmail
             return $content;
         }
 
+        // If $body is an object but not multipart, get body content string
+        if (is_object($body) && method_exists($body, 'getBody')) {
+            return $body->getBody();
+        }
+
+        // Otherwise, assume it's a string
         return (string) $body;
     }
 }

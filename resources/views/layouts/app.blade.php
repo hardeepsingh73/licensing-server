@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="description" content="{{ config('app.description', 'Laravel Application') }}" />
 
-    <title>{{ isset($title) ? "$title | " : '' }}{{ setting('site_name', 'Laravel') }}</title>
+    <title>{{ isset($title) ? "$title | " : '' }}{{ setting('site_name', config('app.name')) }}</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon" />
