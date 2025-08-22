@@ -55,7 +55,6 @@
                     <div class="col-sm-9">
                         <select name="user_id" id="user_id"
                             class="form-select @error('user_id') is-invalid @enderror">
-                            <option value="">-- Unassigned --</option>
                             @foreach ($users as $user)
                                 <option value="{{ $user->id }}"
                                     {{ old('user_id', $license->user_id ?? '') == $user->id ? 'selected' : '' }}>
