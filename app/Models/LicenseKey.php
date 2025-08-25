@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use App\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class LicenseKey extends Model
+class LicenseKey extends Authenticatable implements JWTSubject
 {
     use SoftDeletes, LogsActivity;
 
@@ -65,5 +66,26 @@ class LicenseKey extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    /**
+     * Get the identifier that will be stored in the JWT subject claim.
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     */
+    public function getJWTCustomClaims()
+    {
+        $deviceCount = $this->devices ? $this->devices()->count() : 0;
+        return [
+            'license_key' => $this->key,
+            'activation_limit' => $this->activation_limit,
+            'activated_devices' => $deviceCount + 1,
+            'exp' => now()->addDays(7)->timestamp
+        ];
     }
 }

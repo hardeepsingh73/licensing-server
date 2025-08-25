@@ -8,9 +8,9 @@ use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 /**
  * Class User
@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon|null             $updated_at        Timestamp when user was last updated.
  * @property \Carbon\Carbon|null             $deleted_at        Timestamp when user was soft deleted.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     // Automatically logs model events such as create, update, and delete.
     use LogsActivity;
@@ -47,9 +47,6 @@ class User extends Authenticatable
 
     // Adds role and permission handling from Spatie package.
     use HasRoles;
-
-    // Enables API authentication tokens (via Laravel Sanctum).
-    use HasApiTokens;
 
     // Allows soft deletes so users can be restored later if deleted.
     use SoftDeletes;
@@ -110,5 +107,13 @@ class User extends Authenticatable
     public function routeNotificationForMail($notification)
     {
         return $this->email;
+    }
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }

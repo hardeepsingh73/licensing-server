@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class LicenseController extends Controller implements HasMiddleware
 {
@@ -24,8 +25,8 @@ class LicenseController extends Controller implements HasMiddleware
         return [
             // Add permissions here if needed
             // new Middleware('permission:validate key', only: ['validateKey']),
-            new Middleware('permission:activate key', only: ['activateKey']),
-            new Middleware('permission:reissue key', only: ['reissueKey']),
+            // new Middleware('permission:activate key', only: ['activateKey']),
+            // new Middleware('permission:reissue key', only: ['reissueKey']),
             // new Middleware('permission:list devices', only: ['listDevices']),
         ];
     }
@@ -77,7 +78,7 @@ class LicenseController extends Controller implements HasMiddleware
         $license = $license['data'];
 
         // Check device limit
-        $deviceCount = LicenseActivation::where('license_key_id', $license->id)->count();
+        $deviceCount = $license->devices()->count();
         if ($deviceCount >= $license->activation_limit) {
             return response()->json([
                 'success' => false,
@@ -88,6 +89,8 @@ class LicenseController extends Controller implements HasMiddleware
         // Check if device already activated or soft deleted
         $existing = LicenseActivation::withTrashed()->where('license_key_id', $license->id)->where('device_id', $request->input('device_id'))->first();
 
+
+        $token = JWTAuth::fromUser($license);
         if ($existing) {
             if ($existing->trashed()) {
                 $existing->restore();
@@ -96,12 +99,14 @@ class LicenseController extends Controller implements HasMiddleware
 
                 return response()->json([
                     'success' => true,
+                    'token' => $token,
                     'message' => 'Device re-activated successfully'
                 ]);
             }
 
             return response()->json([
                 'success' => false,
+                'token' => $token,
                 'message' => 'This device is already activated'
             ], 409);
         }
@@ -117,7 +122,8 @@ class LicenseController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'message' => 'Activation successful'
+            'message' => 'Activation successful',
+            'token' => $token,
         ]);
     }
 

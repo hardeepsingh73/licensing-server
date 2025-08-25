@@ -4,6 +4,9 @@ namespace App\Listeners;
 
 use App\Models\EmailLog;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Part\AbstractPart;
 
 /**
  * Listener to log details of sent emails into the database.
@@ -16,57 +19,63 @@ class LogSentEmail
      * @param  \Illuminate\Mail\Events\MessageSent  $event
      * @return void
      */
-    public function handle(MessageSent $event)
+    public function handle(MessageSent $event): void
     {
-        $message = $event->message;
+        try {
+            $message = $event->message;
 
-        // Get recipients - handle both regular emails and password reset emails
-        $to = $this->getRecipients($message, $event);
+            // Get recipients safely
+            $to = $this->getRecipients($message, $event);
 
-        // Get email content
-        $body = $this->getEmailContent($message);
+            // Extract email content
+            $body = $this->getEmailContent($message);
 
-        // Store the email details
-        EmailLog::create([
-            'to' => $to,
-            'subject' => $message->getSubject() ?? '(No Subject)',
-            'body' => $body,
-            'status' => 'sent',
-        ]);
+            // Store the email details
+            EmailLog::create([
+                'to'      => $to,
+                'subject' => $message->getSubject() ?? '(No Subject)',
+                'body'    => $body,
+                'status'  => 'sent',
+            ]);
+        } catch (\Throwable $e) {
+            // Failsafe: log errors into Laravel log, so emails aren’t blocked by DB issues
+            Log::error('Failed logging sent email: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+        }
     }
 
     /**
      * Extract recipients from the message.
      *
      * @param  \Swift_Message|\Symfony\Component\Mime\Email  $message
-     * @param  \Illuminate\Mail\Events\MessageSent  $event
+     * @param  \Illuminate\Mail\Events\MessageSent           $event
      * @return string
      */
-    protected function getRecipients($message, $event)
+    protected function getRecipients($message, MessageSent $event): string
     {
-        // For password reset emails and some other system emails
+        // For system emails like password reset
         if (isset($event->data['email'])) {
             return $event->data['email'];
         }
 
-        // For Symfony Mailer (Laravel 7+)
-        $to = $message->getTo();
-        if (is_array($to) && !empty($to)) {
-            return implode(',', array_map(function ($address) {
-                return $address instanceof \Symfony\Component\Mime\Address
-                    ? $address->getAddress()
-                    : $address;
-            }, $to));
+        // Symfony Mailer (Laravel 9+)
+        if (method_exists($message, 'getTo')) {
+            $to = $message->getTo();
+            if (is_array($to) && !empty($to)) {
+                return implode(',', array_map(
+                    fn($address) =>
+                    $address instanceof Address ? $address->getAddress() : $address,
+                    $to
+                ));
+            }
         }
 
-        // Fallback for cases where getTo() doesn't return expected data
+        // SwiftMailer fallback
         if (method_exists($message, 'getEnvelope')) {
-            $envelope = $message->getEnvelope();
-            $recipients = $envelope->getRecipients();
+            $recipients = $message->getEnvelope()->getRecipients();
             if (!empty($recipients)) {
-                return implode(',', array_map(function ($recipient) {
-                    return $recipient->getAddress();
-                }, $recipients));
+                return implode(',', array_map(fn($recipient) => $recipient->getAddress(), $recipients));
             }
         }
 
@@ -74,37 +83,34 @@ class LogSentEmail
     }
 
     /**
-     * Extract email content from the message.
+     * Extract email body content (HTML preferred, else plain text).
      *
      * @param  \Swift_Message|\Symfony\Component\Mime\Email  $message
      * @return string
      */
-    protected function getEmailContent($message)
+    protected function getEmailContent($message): string
     {
         $body = $message->getBody();
 
-        if (is_object($body) && method_exists($body, 'getParts')) {
-            $parts = $body->getParts();
-            $content = '';
-
-            foreach ($parts as $part) {
-                if ($part->getMediaType() === EmailLog::TYPE_TEXT && $part->getMediaSubtype() === EmailLog::TYPE_HTML) {
-                    return $part->getBody();
+        // Symfony Mailer (multipart handling)
+        if ($body instanceof AbstractPart && method_exists($body, 'getParts')) {
+            foreach ($body->getParts() as $part) {
+                if ($part->getMediaType() === 'text' && $part->getMediaSubtype() === 'html') {
+                    return (string) $part->getBody();
                 }
-                if ($part->getMediaType() === EmailLog::TYPE_TEXT && $part->getMediaSubtype() === EmailLog::TYPE_PLAIN) {
-                    $content = $part->getBody();
+                if ($part->getMediaType() === 'text' && $part->getMediaSubtype() === 'plain') {
+                    $plain = (string) $part->getBody();
                 }
             }
-
-            return $content;
+            return $plain ?? '';
         }
 
-        // If $body is an object but not multipart, get body content string
+        // SwiftMailer style body
         if (is_object($body) && method_exists($body, 'getBody')) {
-            return $body->getBody();
+            return (string) $body->getBody();
         }
 
-        // Otherwise, assume it's a string
-        return (string) $body;
+        // Fallback to string
+        return (string) $body ?? '';
     }
 }

@@ -40,6 +40,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
+        'api_license' => [
+            'driver' => 'jwt',
+            'provider' => 'licenses',
+        ],
     ],
 
     /*
@@ -64,7 +72,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
-
+        'licenses' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\LicenseKey::class,
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
